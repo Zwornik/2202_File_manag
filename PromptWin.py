@@ -18,7 +18,7 @@ class MyWindow(QMainWindow):
 		uic.loadUi("PromptWin.ui", self)
 
 	# def setIcon(self):
-		appIcon = QIcon("MK_ico.png")
+		appIcon = QIcon("Image\MK_ico.png")
 		self.setWindowIcon(appIcon)
 
 		#Define Widgets
