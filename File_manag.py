@@ -1,16 +1,17 @@
 import exifread
 import os
-import time
 import logging
 from datetime import datetime as dt
 import tkinter as tk
 from tkinter import filedialog
+# from GUI_call import *
 
 logging.basicConfig(level=logging.ERROR)
 file_list = []
 
 # Display dialog window asking for the folder
 def folder_input():
+
 	folder = input("Press 'Enter' to select a folder with your files: ")
 
 	root = tk.Tk()
@@ -59,7 +60,7 @@ def dateformat(date_string):
 	return date_string
 
 
-# EXTRACTING 3 DIFFERENT FILE CREATION DATE AND RETURNS THE OLDEST ONE
+# EXTRACTING 3 PICTURE CREATION DATE AND RETURNS THE OLDEST ONE
 
 def oldest_date(path, date_extract):
 	date_m = dateformat(ts_to_dt(os.path.getmtime(path)))  # Modification date
@@ -81,26 +82,27 @@ def oldest_date(path, date_extract):
 
 	else:
 		date = sorted([date_c, date_m])[0]
-
 	return date
 
 
 # Walking through all files in folder and subfolders
-for path, subdirs, files in os.walk(folder):
-	for item in os.scandir(path):
-		if item.is_file():
-			c += 1
-			path = item.path
-			date = oldest_date(path, date_extract)
-			name = item.name
-			file_type = os.path.splitext(item)[1]
-			file_date = dateformat(ts_to_dt(item.stat().st_atime))
-			size = ("{:,.0f}".format(item.stat().st_size / 1000).replace(",", " "))
+class Walk_folders():
 
-			file_list.append((name, file_type, size, date, path))
-			#print("{:<30s}   {}  {:>12} KB   {}   {}".format(name, file_type, size, date, path))
+	for path, subdirs, files in os.walk(folder):
+		for item in os.scandir(path):
+			if item.is_file():
+				c += 1
+				path = item.path
+				date = oldest_date(path, date_extract)
+				name = item.name
+				file_type = os.path.splitext(item)[1]
+				file_date = dateformat(ts_to_dt(item.stat().st_atime))
+				size = ("{:,.0f}".format(item.stat().st_size / 1000).replace(",", " "))
 
-print(type(name), type(file_type), type(size), type(file_date), type(date), type(path))
+				file_list.append((name, file_type, size, date, path))
+				#print("{:<30s}   {}  {:>12} KB   {}   {}".format(name, file_type, size, date, path))
+
+		print(type(name), type(file_type), type(size), type(file_date), type(date), type(path))
 print(c)
 print(file_list)
 

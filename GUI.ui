@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>734</width>
-    <height>631</height>
+    <width>835</width>
+    <height>894</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -40,10 +40,16 @@
       </property>
       <item>
        <widget class="QFrame" name="frame">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>76</height>
+          <height>97</height>
          </size>
         </property>
         <property name="frameShape">
@@ -53,6 +59,21 @@
          <enum>QFrame::Raised</enum>
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_8">
+         <property name="spacing">
+          <number>20</number>
+         </property>
+         <property name="leftMargin">
+          <number>6</number>
+         </property>
+         <property name="topMargin">
+          <number>6</number>
+         </property>
+         <property name="rightMargin">
+          <number>6</number>
+         </property>
+         <property name="bottomMargin">
+          <number>6</number>
+         </property>
          <item>
           <widget class="QLabel" name="label_7">
            <property name="sizePolicy">
@@ -61,11 +82,19 @@
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
+           <property name="maximumSize">
+            <size>
+             <width>16777215</width>
+             <height>78</height>
+            </size>
+           </property>
            <property name="text">
-            <string>1.  Browse for two localizations where you would like to find duplicated files
+            <string>1.  Browse two localizations to find duplicated files
 2.  Select if you want to include subfolders
-3.  Run a search for duplicates
-4.  Select the location to have files deleted</string>
+3.  Select if you want to include picture metadata
+4.  Run “Find Duplicates” 
+5.  Select the location to have files deleted
+</string>
            </property>
           </widget>
          </item>
@@ -168,7 +197,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_3">
+           <widget class="QLabel" name="label_A">
             <property name="text">
              <string>TextLabel</string>
             </property>
@@ -197,27 +226,139 @@
             <property name="lineWidth">
              <number>1</number>
             </property>
+            <property name="midLineWidth">
+             <number>0</number>
+            </property>
             <property name="sizeAdjustPolicy">
              <enum>QAbstractScrollArea::AdjustIgnored</enum>
             </property>
-            <property name="columnCount">
-             <number>3</number>
+            <property name="iconSize">
+             <size>
+              <width>0</width>
+              <height>0</height>
+             </size>
             </property>
+            <property name="itemsExpandable">
+             <bool>true</bool>
+            </property>
+            <property name="sortingEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="animated">
+             <bool>true</bool>
+            </property>
+            <property name="allColumnsShowFocus">
+             <bool>true</bool>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <property name="columnCount">
+             <number>5</number>
+            </property>
+            <attribute name="headerVisible">
+             <bool>true</bool>
+            </attribute>
+            <attribute name="headerCascadingSectionResizes">
+             <bool>false</bool>
+            </attribute>
+            <attribute name="headerMinimumSectionSize">
+             <number>30</number>
+            </attribute>
+            <attribute name="headerDefaultSectionSize">
+             <number>80</number>
+            </attribute>
+            <attribute name="headerHighlightSections">
+             <bool>false</bool>
+            </attribute>
+            <attribute name="headerShowSortIndicator" stdset="0">
+             <bool>true</bool>
+            </attribute>
+            <attribute name="headerStretchLastSection">
+             <bool>true</bool>
+            </attribute>
             <column>
              <property name="text">
-              <string>1</string>
+              <string>Name</string>
              </property>
             </column>
             <column>
              <property name="text">
-              <string>Rozmiar</string>
+              <string>Type</string>
              </property>
             </column>
             <column>
              <property name="text">
-              <string>Data modyfikacji</string>
+              <string>Size</string>
              </property>
             </column>
+            <column>
+             <property name="text">
+              <string>Created</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Path</string>
+             </property>
+            </column>
+            <item>
+             <property name="text">
+              <string>New Item</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <item>
+              <property name="text">
+               <string>New Subitem</string>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+              <property name="text">
+               <string/>
+              </property>
+             </item>
+            </item>
+            <item>
+             <property name="text">
+              <string>bbbb</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>aaaa</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>1111</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>&quot;cccc&quot; &quot;dup&quot;</string>
+             </property>
+             <property name="textAlignment">
+              <set>AlignTrailing|AlignVCenter</set>
+             </property>
+            </item>
            </widget>
           </item>
          </layout>
@@ -263,12 +404,12 @@
                </size>
               </property>
               <property name="text">
-               <string>D:Temp/dasae sd jjjqq TT</string>
+               <string>D:\TEMP</string>
               </property>
              </widget>
             </item>
             <item>
-             <widget class="QPushButton" name="Borwse_B">
+             <widget class="QPushButton" name="Browse_B">
               <property name="sizePolicy">
                <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
                 <horstretch>0</horstretch>
@@ -305,7 +446,7 @@
            </widget>
           </item>
           <item>
-           <widget class="QLabel" name="label_4">
+           <widget class="QLabel" name="label_B">
             <property name="text">
              <string>TextLabel</string>
             </property>
@@ -334,14 +475,50 @@
             <property name="frameShape">
              <enum>QFrame::WinPanel</enum>
             </property>
+            <property name="sortingEnabled">
+             <bool>true</bool>
+            </property>
+            <property name="animated">
+             <bool>true</bool>
+            </property>
+            <property name="allColumnsShowFocus">
+             <bool>true</bool>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+            <attribute name="headerMinimumSectionSize">
+             <number>30</number>
+            </attribute>
+            <attribute name="headerDefaultSectionSize">
+             <number>80</number>
+            </attribute>
+            <attribute name="headerHighlightSections">
+             <bool>true</bool>
+            </attribute>
             <column>
              <property name="text">
-              <string>1</string>
+              <string>Name</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Type</string>
              </property>
             </column>
             <column>
              <property name="text">
               <string>Size</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Created</string>
+             </property>
+            </column>
+            <column>
+             <property name="text">
+              <string>Path</string>
              </property>
             </column>
            </widget>
@@ -515,19 +692,6 @@
         </item>
        </layout>
       </item>
-      <item alignment="Qt::AlignLeft">
-       <widget class="QLabel" name="status_label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
-          <horstretch>20</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
-        </property>
-        <property name="text">
-         <string>duplicates found</string>
-        </property>
-       </widget>
-      </item>
      </layout>
     </item>
    </layout>
@@ -539,7 +703,7 @@
   <tabstop>Browse_A</tabstop>
   <tabstop>subfolders_A</tabstop>
   <tabstop>path_line_B</tabstop>
-  <tabstop>Borwse_B</tabstop>
+  <tabstop>Browse_B</tabstop>
   <tabstop>subfolders_B</tabstop>
   <tabstop>tree_A</tabstop>
   <tabstop>tree_B</tabstop>
