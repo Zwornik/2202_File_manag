@@ -2,15 +2,20 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, 
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QFont
 import sys
+import exifread
+import os
+import logging
+from datetime import datetime as dt
 # from File_manag import *
 
 
-file_list = [('20160130_215245.jpg', '.jpg', '2 724', '2021.09.23 20:11:22', 'D:\\TEMP\\20160130_215245.jpg'), ('20160130_215331sadasdasdasdasdasdd.jpg', '.jpg', '2 689', '2022.08.18 16:26:14', 'D:\\TEMP\\20160130_215331sadasdasdasdasdasdd.jpg'), ('DSC_0044.JPG', '.JPG', '3 440', '2022.05.28 17:59:00', 'D:\\TEMP\\DSC_0044.JPG'), ('DSC_0044.NEF', '.NEF', '15 991', '2022.05.28 17:59:00', 'D:\\TEMP\\DSC_0044.NEF'), ('DSC_0045.JPG', '.JPG', '4 055', '2022.05.28 17:59:14', 'D:\\TEMP\\DSC_0045.JPG')]
+# file_list = [('20160130_215245.jpg', '.jpg', '2 724', '2021.09.23 20:11:22', 'D:\\TEMP\\20160130_215245.jpg'), ('20160130_215331sadasdasdasdasdasdd.jpg', '.jpg', '2 689', '2022.08.18 16:26:14', 'D:\\TEMP\\20160130_215331sadasdasdasdasdasdd.jpg'), ('DSC_0044.JPG', '.JPG', '3 440', '2022.05.28 17:59:00', 'D:\\TEMP\\DSC_0044.JPG'), ('DSC_0044.NEF', '.NEF', '15 991', '2022.05.28 17:59:00', 'D:\\TEMP\\DSC_0044.NEF'), ('DSC_0045.JPG', '.JPG', '4 055', '2022.05.28 17:59:14', 'D:\\TEMP\\DSC_0045.JPG')]
 item = ('20160130_215245.jpg', '.jpg', '2 724', '2021.09.23 20:11:22', 'D:\\TEMP\\20160130_215245.jpg')
 Name = '20160130_215245.jpg'
 Size = '2 724'
 Path = 'D:\\TEMP\\20160130_215245.jpg'
 items = []
+c=0
 
 class MyWindow(QMainWindow):
 
@@ -41,7 +46,6 @@ class MyWindow(QMainWindow):
 		item = QTreeWidgetItem([Name])
 		Siz = QTreeWidgetItem([Size])
 		item.addChild(Siz)
-		print(item, Siz,)
 		self.tree_A.insertTopLevelItems(0, [item])
 
 		# Tree B
@@ -49,9 +53,7 @@ class MyWindow(QMainWindow):
 		item = QTreeWidgetItem([Name])
 		Siz = QTreeWidgetItem([Size])
 		item.addChild(Siz)
-		print(item, Siz, )
 		self.tree_B.insertTopLevelItems(0, [item])
-
 
 		# Acctions
 		self.browse_A.clicked.connect(lambda x: self.browse("A")) # Button A
@@ -63,46 +65,86 @@ class MyWindow(QMainWindow):
 		self.show()
 
 
+
 	def browse(self, side):
 		"""Opens dialog selecting folder location"""
 
 		dialog = QFileDialog(self)
 		dialog.setDirectory("C:/")
 		path = dialog.getExistingDirectory()
-		self.show_files(self, path, side)
+		print(path)
+		self.walk_folders(path)
 
 
-	def show_files(self, path, side):
-		"""Display files from given folder in a tree"""
-
-	def clear_tree(self, side):
-		"""Clearing tree before loading data"""
-
-		if side == "A":
-			self.tree_A.clear()
-		else:
-			self.tree_B.clear()
-
-	def
-		# iterated through given location
-		for fdata in path:
-			# for i in fdata:
-			name = fdata[0]
-			ext = fdata[1]
-			size = fdata[2]
-			date = fdata[3]
-			path = fdata[4]
-
-			# create item to add to the tree
-			item = QTreeWidgetItem([name, ext, size, date, path]) # accepts "" ot "","",""
-
-	def display_tree(self, side):
+	def show_files(self, file_list):
 		"""Display files in corresponding tree"""
+		print("aaaaaaaaaaaaaa", file_list)
+		items = []
+		# side = 0
+		# if side == "A":
+		# 	self.tree_A.clear()
+		# 	self.tree_A.insertTopLevelItems(items)
+		# else:
+		self.tree_B.clear()
+		for i in file_list:
+			items.append(QTreeWidgetItem(i))
+		print(items)
+		self.tree_B.insertTopLevelItems(0, items)
 
-		if side == "A":
-			self.tree_A.insertTopLevelItems(0, [item])
+	def ts_to_dt(self, ts):
+		return dt.fromtimestamp(ts)
+
+	def dateformat(self, date_string):
+		date_string = date_string.strftime("%Y.%m.%d %H:%M:%S")
+		return date_string
+
+	def oldest_date(self, path, date_extract):
+		"""EXTRACTING 3 PICTURE CREATION DATES AND RETURNS THE OLDEST ONE"""
+
+		date_m = self.dateformat(self.ts_to_dt(os.path.getmtime(path)))  # Modification date
+		date_c = self.dateformat(self.ts_to_dt(os.path.getctime(path)))  # File creation date
+
+		if date_extract == "Y":
+
+			# reading EXIF date from picture reader
+			try:
+				file = open(path, 'rb')  # opens file to check if EXIF tag is there with date of picture taken
+				tags = exifread.process_file(file, stop_tag="EXIF DateTimeOriginal")
+				date_t = str(tags["EXIF DateTimeOriginal"])  # Picture taken date
+			except:
+				date_t = "Z"
+				pass
+			else:
+				date_t = date_t[:4] + "." + date_t[5:7] + "." + date_t[8:]  # replacing : with . in date format
+			date = sorted([date_t, date_c, date_m])[0]  # Selecting the oldest date
+
 		else:
-			self.tree_B.insertTopLevelItems(0, [item])
+			date = sorted([date_c, date_m])[0]
+		return date
+
+	def walk_folders(self, path):
+		"""WALKING THROUGH ALL FILES IN FOLDER AND SUB FOLDERS"""
+		print(path)
+		file_list = []
+		for path, subdirs, files in os.walk(path):
+			for item in os.scandir(path):
+				if item.is_file():
+					# self.c += 1
+					path = item.path
+					date = self.dateformat(self.ts_to_dt(os.path.getctime(path)))
+					name = item.name
+					file_type = os.path.splitext(item)[1]
+					file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
+					size = ("{:,.0f}".format(item.stat().st_size / 1000).replace(",", " "))
+
+					file_list.append([name, file_type, size, date, path])
+
+
+			# print("{:<30s}   {}  {:>12} KB   {}   {}".format(name, file_type, size, date, path))
+
+			# print(type(name), type(file_type), type(size), type(file_date), type(date), type(path))
+		print(file_list)
+		self.show_files(file_list)
 
 
 
@@ -124,6 +166,7 @@ class MyWindow(QMainWindow):
 	# 	self.textedit.setPlainText("")
 
 	# def add(self, item):
+
 
 
 
