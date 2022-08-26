@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>835</width>
-    <height>894</height>
+    <width>807</width>
+    <height>896</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -49,7 +49,7 @@
         <property name="maximumSize">
          <size>
           <width>16777215</width>
-          <height>97</height>
+          <height>96</height>
          </size>
         </property>
         <property name="frameShape">
@@ -60,13 +60,13 @@
         </property>
         <layout class="QHBoxLayout" name="horizontalLayout_8">
          <property name="spacing">
-          <number>20</number>
+          <number>0</number>
          </property>
          <property name="leftMargin">
           <number>6</number>
          </property>
          <property name="topMargin">
-          <number>6</number>
+          <number>0</number>
          </property>
          <property name="rightMargin">
           <number>6</number>
@@ -74,31 +74,45 @@
          <property name="bottomMargin">
           <number>6</number>
          </property>
-         <item>
+         <item alignment="Qt::AlignVCenter">
           <widget class="QLabel" name="label_7">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Preferred" vsizetype="Maximum">
+            <sizepolicy hsizetype="Expanding" vsizetype="Maximum">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
            </property>
            <property name="maximumSize">
             <size>
-             <width>16777215</width>
-             <height>78</height>
+             <width>15000</width>
+             <height>92</height>
             </size>
            </property>
            <property name="text">
-            <string>1.  Browse two localizations to find duplicated files
-2.  Select if you want to include subfolders
-3.  Select if you want to include picture metadata
-4.  Run “Find Duplicates” 
-5.  Select the location to have files deleted
-</string>
+            <string>1.  Select if you want to include subfolders in your search
+2.  Select if you want to extract the oldest date saved in picture EXIF metadata. Extracting metadata takes more time. 
+3.  Browse two localizations to find duplicated files
+4.  Run “Find Duplicates”
+5.  Select the location to have files deleted</string>
+           </property>
+           <property name="textFormat">
+            <enum>Qt::AutoText</enum>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+           <property name="margin">
+            <number>0</number>
+           </property>
+           <property name="indent">
+            <number>0</number>
+           </property>
+           <property name="openExternalLinks">
+            <bool>false</bool>
            </property>
           </widget>
          </item>
-         <item alignment="Qt::AlignRight|Qt::AlignBottom">
+         <item alignment="Qt::AlignBottom">
           <widget class="QLabel" name="label_12">
            <property name="text">
             <string>© Marcin Kruszelnicki 2022</string>
@@ -123,14 +137,7 @@
         <widget class="QWidget" name="verticalLayoutWidget">
          <layout class="QVBoxLayout" name="verticalLayout">
           <item>
-           <widget class="QLabel" name="label">
-            <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Location A&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0,0">
+           <layout class="QHBoxLayout" name="horizontalLayout_3" stretch="0">
             <property name="leftMargin">
              <number>6</number>
             </property>
@@ -141,21 +148,55 @@
              <number>6</number>
             </property>
             <item>
-             <widget class="QLineEdit" name="path_line_A">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QLabel" name="label">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Location A&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
               </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_6" stretch="0,0,0,0">
+            <property name="leftMargin">
+             <number>6</number>
+            </property>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>6</number>
+            </property>
+            <item>
+             <widget class="QCheckBox" name="subfolders_A">
               <property name="cursor">
-               <cursorShape>IBeamCursor</cursorShape>
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string/>
+              </property>
+              <property name="text">
+               <string>Iclude subfoders</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="find_EXIF_A">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It might take much longer to search for duplicates with this option on &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Extract EXIF date</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="path_label_A_2">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>
@@ -184,24 +225,74 @@
            </layout>
           </item>
           <item>
-           <widget class="QCheckBox" name="subfolders_A">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
+           <layout class="QHBoxLayout" name="horizontalLayout_4" stretch="0,0,0">
+            <property name="leftMargin">
+             <number>6</number>
             </property>
-            <property name="toolTip">
-             <string/>
+            <property name="topMargin">
+             <number>0</number>
             </property>
-            <property name="text">
-             <string>Iclude subfoders</string>
+            <property name="rightMargin">
+             <number>6</number>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_A">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
+            <item>
+             <widget class="QLabel" name="path_label_A">
+              <property name="text">
+               <string>ccccc</string>
+              </property>
+              <property name="wordWrap">
+               <bool>true</bool>
+              </property>
+              <property name="openExternalLinks">
+               <bool>true</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="cancel_A">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Cancel</string>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="display_files_A">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Display files</string>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QTreeWidget" name="tree_A">
@@ -210,6 +301,9 @@
             </property>
             <property name="contextMenuPolicy">
              <enum>Qt::NoContextMenu</enum>
+            </property>
+            <property name="acceptDrops">
+             <bool>true</bool>
             </property>
             <property name="layoutDirection">
              <enum>Qt::LeftToRight</enum>
@@ -232,11 +326,26 @@
             <property name="sizeAdjustPolicy">
              <enum>QAbstractScrollArea::AdjustIgnored</enum>
             </property>
+            <property name="editTriggers">
+             <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+            </property>
+            <property name="showDropIndicator" stdset="0">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::MultiSelection</enum>
+            </property>
+            <property name="selectionBehavior">
+             <enum>QAbstractItemView::SelectRows</enum>
+            </property>
             <property name="iconSize">
              <size>
-              <width>0</width>
-              <height>0</height>
+              <width>16</width>
+              <height>16</height>
              </size>
+            </property>
+            <property name="rootIsDecorated">
+             <bool>true</bool>
             </property>
             <property name="itemsExpandable">
              <bool>true</bool>
@@ -361,19 +470,45 @@
             </item>
            </widget>
           </item>
+          <item alignment="Qt::AlignLeft">
+           <widget class="QLabel" name="label_A">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="verticalLayoutWidget_2">
          <layout class="QVBoxLayout" name="verticalLayout_3">
           <item>
-           <widget class="QLabel" name="label_2">
-            <property name="text">
-             <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Location B&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="1">
+            <property name="leftMargin">
+             <number>6</number>
             </property>
-           </widget>
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <property name="rightMargin">
+             <number>6</number>
+            </property>
+            <item alignment="Qt::AlignHCenter">
+             <widget class="QLabel" name="label_2">
+              <property name="text">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p align=&quot;center&quot;&gt;&lt;span style=&quot; font-size:12pt; font-weight:600;&quot;&gt;Location B&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0,0">
+           <layout class="QHBoxLayout" name="horizontalLayout_10" stretch="0,0,0,0">
             <property name="leftMargin">
              <number>6</number>
             </property>
@@ -384,27 +519,35 @@
              <number>6</number>
             </property>
             <item>
-             <widget class="QLineEdit" name="path_line_B">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
+             <widget class="QCheckBox" name="subfolders_B">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
               </property>
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>24</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>16777213</width>
-                <height>16777215</height>
-               </size>
+              <property name="toolTip">
+               <string/>
               </property>
               <property name="text">
-               <string>D:\TEMP</string>
+               <string>Iclude subfoders</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="find_EXIF_B">
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="toolTip">
+               <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It might take much longer to search for duplicates with this option on &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+              </property>
+              <property name="text">
+               <string>Extract EXIF date</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLabel" name="path_label_B_2">
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>
@@ -433,24 +576,71 @@
            </layout>
           </item>
           <item>
-           <widget class="QCheckBox" name="subfolders_B">
-            <property name="cursor">
-             <cursorShape>PointingHandCursor</cursorShape>
+           <layout class="QHBoxLayout" name="horizontalLayout_5" stretch="0,0,0">
+            <property name="leftMargin">
+             <number>6</number>
             </property>
-            <property name="toolTip">
-             <string/>
+            <property name="topMargin">
+             <number>0</number>
             </property>
-            <property name="text">
-             <string>Iclude subfoders</string>
+            <property name="rightMargin">
+             <number>6</number>
             </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QLabel" name="label_B">
-            <property name="text">
-             <string>TextLabel</string>
-            </property>
-           </widget>
+            <item alignment="Qt::AlignLeft">
+             <widget class="QLabel" name="path_label_B">
+              <property name="text">
+               <string>gfjjkgjiikgi</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="cancel_B">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Cancel</string>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="display_files_B">
+              <property name="sizePolicy">
+               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+                <horstretch>0</horstretch>
+                <verstretch>0</verstretch>
+               </sizepolicy>
+              </property>
+              <property name="cursor">
+               <cursorShape>PointingHandCursor</cursorShape>
+              </property>
+              <property name="text">
+               <string>Display files</string>
+              </property>
+              <property name="default">
+               <bool>false</bool>
+              </property>
+              <property name="flat">
+               <bool>false</bool>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item>
            <widget class="QTreeWidget" name="tree_B">
@@ -474,6 +664,18 @@
             </property>
             <property name="frameShape">
              <enum>QFrame::WinPanel</enum>
+            </property>
+            <property name="alternatingRowColors">
+             <bool>true</bool>
+            </property>
+            <property name="selectionMode">
+             <enum>QAbstractItemView::MultiSelection</enum>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>16</width>
+              <height>16</height>
+             </size>
             </property>
             <property name="sortingEnabled">
              <bool>true</bool>
@@ -523,21 +725,21 @@
             </column>
            </widget>
           </item>
+          <item alignment="Qt::AlignLeft">
+           <widget class="QLabel" name="label_B">
+            <property name="minimumSize">
+             <size>
+              <width>60</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
-       </widget>
-      </item>
-      <item alignment="Qt::AlignHCenter">
-       <widget class="QCheckBox" name="find_EXIF">
-        <property name="cursor">
-         <cursorShape>PointingHandCursor</cursorShape>
-        </property>
-        <property name="toolTip">
-         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;It might take much longer to search for duplicates with this option on &lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-        </property>
-        <property name="text">
-         <string>Find the oldest date in picture metadata</string>
-        </property>
        </widget>
       </item>
       <item>
@@ -626,7 +828,7 @@
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
           <property name="text">
-           <string>Delete files from location A</string>
+           <string>Delete duplicates from location A</string>
           </property>
           <property name="default">
            <bool>false</bool>
@@ -667,7 +869,7 @@
            <cursorShape>PointingHandCursor</cursorShape>
           </property>
           <property name="text">
-           <string>Delete files from location B</string>
+           <string>Delete duplicates from location B</string>
           </property>
           <property name="default">
            <bool>false</bool>
@@ -699,15 +901,6 @@
   <widget class="QStatusBar" name="statusbar"/>
  </widget>
  <tabstops>
-  <tabstop>path_line_A</tabstop>
-  <tabstop>Browse_A</tabstop>
-  <tabstop>subfolders_A</tabstop>
-  <tabstop>path_line_B</tabstop>
-  <tabstop>Browse_B</tabstop>
-  <tabstop>subfolders_B</tabstop>
-  <tabstop>tree_A</tabstop>
-  <tabstop>tree_B</tabstop>
-  <tabstop>find_EXIF</tabstop>
   <tabstop>find_duplicates</tabstop>
   <tabstop>delete_A</tabstop>
   <tabstop>delete_B</tabstop>
