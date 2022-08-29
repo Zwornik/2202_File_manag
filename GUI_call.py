@@ -26,6 +26,10 @@ class MyWindow(QMainWindow):
 		appIcon = QIcon("Image\MK_ico.png")
 		self.setWindowIcon(appIcon)
 
+		# Variables
+		self.no_warn = True  # False if time warning dialog window should not appear again
+
+
 		# Define main window Widgets
 		self.label_A = self.findChild(QLabel, "label_A")
 		self.label_B = self.findChild(QLabel, "label_B")
@@ -43,8 +47,8 @@ class MyWindow(QMainWindow):
 
 		self.subf_check_A = self.findChild(QCheckBox, "subfolders_A")
 		self.subf_check_B = self.findChild(QCheckBox, "subfolders_B")
-		self.exif_check_A = self.findChild(QCheckBox, "find_EXIF_A")
-		self.exif_check_B = self.findChild(QCheckBox, "find_EXIF_B")
+		MyWindow.exif_check_A = self.findChild(QCheckBox, "find_EXIF_A")
+		MyWindow.exif_check_B = self.findChild(QCheckBox, "find_EXIF_B")
 
 		self.statusBar = self.findChild(QStatusBar, "statusbar")
 		self.statusBar.setFont(QFont("Arial", 18))
@@ -59,8 +63,8 @@ class MyWindow(QMainWindow):
 		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))
 		# Search_thread.progress.connect(self.label_A)
 
-		self.exif_check_A.stateChanged.connect(lambda: self.time_warning("A"))
-		self.exif_check_B.stateChanged.connect(lambda: self.time_warning("B"))
+		MyWindow.exif_check_A.toggled.connect(lambda: self.time_warning("A"))
+		MyWindow.exif_check_B.toggled.connect(lambda: self.time_warning("B"))
 		# self.find_dup.clicked.connect(lambda x: self.browse("A"))  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
 		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
@@ -72,33 +76,36 @@ class MyWindow(QMainWindow):
 		self.show()
 
 	def time_warning(self, side):
+		"""Display warning dialog"""
 
-		if self.exif_check_A.checkState() or self.exif_check_B.checkState():
-			print("OK")
+		if self.no_warn and (MyWindow.exif_check_A.checkState() or MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
 			warning = QDialog()
-			uic.loadUi("Time_warning.ui", warning)
-
+			uic.loadUi("Time_warning.ui", warning)  # Loading UI file with Dialog
 			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
+			self.warning_check_box = warning.findChild(QCheckBox, "checkBox")
+
+			self.warning_check_box.toggled.connect(self.block_warning)
 			button_box.accepted.connect(lambda: self.exif_check("Accepted", side))
 			button_box.rejected.connect(lambda: self.exif_check("Rejected", side))
 
-			x = warning.exec_()
+			x = warning.exec_()  # Show Dialog window
+
+	def block_warning(self):
+		if self.warning_check_box.checkState() == 2:
+			self.no_warn = False
+
 
 	def exif_check(self, accept, side):
+		"""Uncheck 'exif_check' check box if 'cancel' selected in warning window"""
 
-		if side == "A":
-			if accept == "Accepted":
-				self.exif_check_A.setChecked(True)
-				print("A OK")
-			else:
-				self.exif_check_A.setChecked(False)
-				print("A False")
+		if accept == "Accepted":
+			pass
 		else:
-			if accept == "Accepted":
-				self.exif_check_B.setChecked(True)
-				print("B True")
+			if side == "A":
+				MyWindow.exif_check_A.setChecked(False)
+				print("A False")
 			else:
-				self.exif_check_B.setChecked(False)
+				MyWindow.exif_check_B.setChecked(False)
 				print("B False")
 
 
@@ -212,7 +219,7 @@ class Search_thread(QThread):
 		date_m = self.dateformat(self.ts_to_dt(os.path.getmtime(path)))  # Modification date
 		date_c = self.dateformat(self.ts_to_dt(os.path.getctime(path)))  # File creation date
 
-		if self.side == "A" and "self.exif_check_A.checkState()" or self.side == "B" and "self.exif_check_B.checkState()":
+		if self.side == "A" and MyWindow.exif_check_A.checkState() or self.side == "B" and MyWindow.exif_check_B.checkState():
 
 			# reading EXIF date
 			try:
@@ -223,11 +230,13 @@ class Search_thread(QThread):
 				date_exif = "Z"
 				pass
 			else:
-				date_exif = date_exif[:4] + "." + date_exif[5:7] + "." + date_exif[8:] + "EXIF"  # replacing ':' with '.' in date format
-			self.date = sorted([date_exif, date_c, date_m])[0]  # Selecting the oldest date
+				date_exif = date_exif[:4] + "." + date_exif[5:7] + "." + date_exif[8:] + " exif"  # replacing ':' with '.' in date format
+			date = sorted([date_exif, date_c, date_m])[0]  # Selecting the oldest date
 
 		else:
-			self.date = sorted([date_c, date_m])[0]
+			date = sorted([date_c, date_m])[0]
+
+		return date
 
 	# self.statusBar.showMessage("checked?  {}".format(date))
 	# return self.date

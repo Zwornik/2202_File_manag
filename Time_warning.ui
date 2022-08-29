@@ -10,7 +10,7 @@
     <x>0</x>
     <y>0</y>
     <width>360</width>
-    <height>158</height>
+    <height>179</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -28,7 +28,7 @@
   <property name="maximumSize">
    <size>
     <width>360</width>
-    <height>158</height>
+    <height>1058</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -46,9 +46,9 @@
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
     <rect>
-     <x>70</x>
+     <x>0</x>
      <y>115</y>
-     <width>200</width>
+     <width>361</width>
      <height>32</height>
     </rect>
    </property>
@@ -57,6 +57,9 @@
    </property>
    <property name="standardButtons">
     <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   </property>
+   <property name="centerButtons">
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QLabel" name="label">
@@ -107,6 +110,19 @@ requires opening each file.
    </property>
    <property name="alignment">
     <set>Qt::AlignHCenter|Qt::AlignTop</set>
+   </property>
+  </widget>
+  <widget class="QCheckBox" name="checkBox">
+   <property name="geometry">
+    <rect>
+     <x>90</x>
+     <y>150</y>
+     <width>211</width>
+     <height>18</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Don't show this message again</string>
    </property>
   </widget>
  </widget>
