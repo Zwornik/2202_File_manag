@@ -2,7 +2,8 @@ from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, 
 	QCheckBox, QStatusBar, QFileDialog, QDialog, QDialogButtonBox
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QFont
-from PyQt5.QtCore import QThread, pyqtSignal, QObject
+from PyQt5.QtCore import QThread, pyqtSignal
+
 import sys, time, os, logging, exifread
 from datetime import datetime as dt
 
@@ -52,14 +53,14 @@ class MyWindow(QMainWindow):
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
 		# Acctions
-		self.browse_A.clicked.connect(lambda x: self.browse("A"))  # Browse button A clicked
-		self.browse_B.clicked.connect(lambda x: self.browse("B"))  # Browse button B clicked
+		self.browse_A.clicked.connect(lambda: self.browse("A"))  # Browse button A clicked
+		self.browse_B.clicked.connect(lambda: self.browse("B"))  # Browse button B clicked
 		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))
 		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))
 		# Search_thread.progress.connect(self.label_A)
 
-		self.exif_check_A.stateChanged.connect(self.time_warning)
-		self.exif_check_B.stateChanged.connect(self.time_warning)
+		self.exif_check_A.stateChanged.connect(lambda: self.time_warning("A"))
+		self.exif_check_B.stateChanged.connect(lambda: self.time_warning("B"))
 		# self.find_dup.clicked.connect(lambda x: self.browse("A"))  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
 		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
@@ -70,20 +71,35 @@ class MyWindow(QMainWindow):
 		# Showing the App
 		self.show()
 
-	def time_warning(self):
+	def time_warning(self, side):
 
-		if self.exif_check_A.checkState():
+		if self.exif_check_A.checkState() or self.exif_check_B.checkState():
 			print("OK")
 			warning = QDialog()
 			uic.loadUi("Time_warning.ui", warning)
 
 			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
-			button_box.accepted.connect(lambda: print("Accepted"))
-			button_box.rejected.connect(lambda: print("Rejected"))
+			button_box.accepted.connect(lambda: self.exif_check("Accepted", side))
+			button_box.rejected.connect(lambda: self.exif_check("Rejected", side))
 
 			x = warning.exec_()
 
-	def exif_check(self):
+	def exif_check(self, accept, side):
+
+		if side == "A":
+			if accept == "Accepted":
+				self.exif_check_A.setChecked(True)
+				print("A OK")
+			else:
+				self.exif_check_A.setChecked(False)
+				print("A False")
+		else:
+			if accept == "Accepted":
+				self.exif_check_B.setChecked(True)
+				print("B True")
+			else:
+				self.exif_check_B.setChecked(False)
+				print("B False")
 
 
 	def browse(self, side):
