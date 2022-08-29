@@ -1,17 +1,17 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem,  QPushButton, QTreeWidget, QLineEdit, QCheckBox, QStatusBar, QFileDialog
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, QPushButton, QTreeWidget, QLineEdit, \
+	QCheckBox, QStatusBar, QFileDialog, QDialog, QDialogButtonBox
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QFont
-import sys
-import exifread
-import os
-import logging
+from PyQt5.QtCore import QThread, pyqtSignal, QObject
+import sys, time, os, logging, exifread
 from datetime import datetime as dt
+
 # from File_manag import *
 
 logging.basicConfig(level=logging.ERROR)
 
-class MyWindow(QMainWindow):
 
+class MyWindow(QMainWindow):
 	def __init__(self):
 		super(MyWindow, self).__init__()
 
@@ -51,13 +51,15 @@ class MyWindow(QMainWindow):
 		self.tree_A = self.findChild(QTreeWidget, "tree_A")
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
-
 		# Acctions
 		self.browse_A.clicked.connect(lambda x: self.browse("A"))  # Browse button A clicked
 		self.browse_B.clicked.connect(lambda x: self.browse("B"))  # Browse button B clicked
-		self.display_files_A.clicked.connect(lambda x: self.walk_folders("A") if self.clear_tree("A") == True else self.clear_tree("A") )
-		self.display_files_A.clicked.connect(lambda x: self.clear_tree("B"))
+		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))
+		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))
+		# Search_thread.progress.connect(self.label_A)
 
+		self.exif_check_A.stateChanged.connect(self.time_warning)
+		self.exif_check_B.stateChanged.connect(self.time_warning)
 		# self.find_dup.clicked.connect(lambda x: self.browse("A"))  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
 		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
@@ -68,51 +70,103 @@ class MyWindow(QMainWindow):
 		# Showing the App
 		self.show()
 
+	def time_warning(self):
+
+		if self.exif_check_A.checkState():
+			print("OK")
+			warning = QDialog()
+			uic.loadUi("Time_warning.ui", warning)
+
+			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
+			button_box.accepted.connect(lambda: print("Accepted"))
+			button_box.rejected.connect(lambda: print("Rejected"))
+
+			x = warning.exec_()
+
+	def exif_check(self):
+
 
 	def browse(self, side):
 		"""Opens dialog selecting folder location"""
 
 		self.side = side
 		dialog = QFileDialog(self)
-		dialog.setDirectory(self.path_label_A.text()) if side == "A" else dialog.setDirectory(self.path_label_B.text())
+		dialog.setDirectory(self.path_label_A.text()) if side == "A" else dialog.setDirectory(
+				self.path_label_B.text())  # Set start Folder for dialog window
 		path = dialog.getExistingDirectory()
-		self.displ_path(path)
+		self.display_path(path)
 
-
-	def displ_path(self, path):
+	def display_path(self, path):
 		"""Display selected path in corresponding label"""
 
-		self.path_label_A.setText(path) if self.side == "A" else self.path_label_B.setText(path)  # Display to tree A or B
+		self.path_label_A.setText(path) if self.side == "A" else self.path_label_B.setText(path)  # Display path to tree A or B
 
-
-	def clear_tree(self, side):
-
-
+	def display_btn_clicked(self, side):
+		"""Establish new thread and communication with it
+		variables:
+		- side - determines on which side information is going to be displayed, obtained, widget activated
+		- path - search path for files"""
+		self.display_files_A.setEnabled(False)  # Freeze button
+		self.display_files_B.setEnabled(False)  # Freeze button
 		self.side = side
-		if self.side == "A":
-			self.tree_A.clear()
+
+		if side == "A":  #Send 'path' and 'side' to 'Search_thread' class
+			MyWindow.path = self.path_label_A.text()  # Variable to be read by 'Search_thread.run'
+			MyWindow.side = "A"  # Variable to be read by 'Search_thread.run'
+
 		else:
-			self.tree_B.clear()
+			MyWindow.path = self.path_label_B.text()  # Variable to be read by 'Search_thread.run'
+			MyWindow.side = "B"  # Variable to be read by 'Search_thread.run'
+
+		self.thread = Search_thread(self)
+		self.thread.started.connect(self.clear_tree)
+		self.thread.finished.connect(self.show_files)
+		self.clear_tree()
+		self.thread.start()
+
+	def clear_tree(self):
+		"""Clear tree and display 'Wait...' in the tree"""
 
 		items = [QTreeWidgetItem(["Wait...................."])]
-		self.tree_A.insertTopLevelItems(0, items)
-		return True
-
-
-	def walk_folders(self, side):
-		"""WALKING THROUGH ALL FILES IN FOLDER AND SUB FOLDERS"""
-
-		items = []
-		self.side = side
-
-		# self.clear_tree()
-
-		if side == "A":   # reads path from label
-			path = self.path_label_A.text()
+		if self.side == "A":
+			self.tree_A.clear()
+			self.tree_A.insertTopLevelItems(0, items)
 		else:
-			path = self.path_label_B.text()
+			self.tree_B.clear()
+			self.tree_B.insertTopLevelItems(0, items)
 
-		for path, subdirs, files in os.walk(path):
+	def show_files(self):
+		"""Display files in corresponding tree and count in label"""
+
+		if self.side == "A":  # Display to tree A or B
+
+			self.tree_A.clear()
+			self.tree_A.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
+			self.label_A.setText("{} files found".format(self.tree_A.topLevelItemCount())) #Display items count in Label
+
+		else:
+			self.tree_B.clear()
+			self.tree_B.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
+			self.label_B.setText("{} files found".format(self.tree_B.topLevelItemCount())) #Display items count in Label
+
+		self.display_files_A.setEnabled(True)  # Unfreeze buttons
+		self.display_files_B.setEnabled(True)
+
+
+"""""""""""""""""""   SECOND THREAD   """""""""""""""""""
+
+class Search_thread(QThread):
+	"""WALKING THROUGH ALL FILES IN FOLDER AND SUB FOLDERS"""
+	finished = pyqtSignal()
+	progress = pyqtSignal(int)
+
+	def run(self):
+
+		self.path = MyWindow.path  # Variable set in display_btn_clicked
+		self.side = MyWindow.side  # Variable set in display_btn_clicked
+
+		Search_thread.items = []
+		for path, subdirs, files in os.walk(self.path):
 			for item in os.scandir(path):
 				if item.is_file():
 					path = item.path
@@ -121,40 +175,28 @@ class MyWindow(QMainWindow):
 					file_type = os.path.splitext(item)[1]
 					file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
 					size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
+					self.progress.emit(10)
+					Search_thread.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
 
-					items.append(QTreeWidgetItem([name, file_type, size, date, path]))
-		print(items)
-		self.show_files(items)
-
-
-	def show_files(self, items):
-		"""Display files in corresponding tree and count in label"""
-
-		if self.side == "A":  # Display to tree A or B
-			self.tree_A.clear()
-			self.tree_A.insertTopLevelItems(0, items)
-			self.label_A.setText("{} files found".format(self.tree_A.topLevelItemCount()))
-		else:
-			self.tree_B.clear()
-			self.tree_B.insertTopLevelItems(0, items)
-			self.label_B.setText("{} files found".format(self.tree_B.topLevelItemCount()))
-
+		self.finished.emit()  # Emit signal about finished job
 
 	def ts_to_dt(self, ts):
+		"""Transform time stamp to datatime object"""
 		return dt.fromtimestamp(ts)
 
 	def dateformat(self, date_string):
+		"""Format date string"""
 		date_string = date_string.strftime("%Y.%m.%d %H:%M:%S")
 		return date_string
 
 	def oldest_date(self, path):
 		"""EXTRACT 3 PICTURE CREATION DATES AND RETURNS THE OLDEST ONE"""
-		print("AAAA" , self.exif_check_A.checkState())
 
+		# print(self.exif_check_A.checkState())
 		date_m = self.dateformat(self.ts_to_dt(os.path.getmtime(path)))  # Modification date
 		date_c = self.dateformat(self.ts_to_dt(os.path.getctime(path)))  # File creation date
 
-		if self.side == "A" and self.exif_check_A.checkState() or self.side == "B" and self.exif_check_B.checkState():
+		if self.side == "A" and "self.exif_check_A.checkState()" or self.side == "B" and "self.exif_check_B.checkState()":
 
 			# reading EXIF date
 			try:
@@ -166,15 +208,13 @@ class MyWindow(QMainWindow):
 				pass
 			else:
 				date_exif = date_exif[:4] + "." + date_exif[5:7] + "." + date_exif[8:] + "EXIF"  # replacing ':' with '.' in date format
-			date = sorted([date_exif, date_c, date_m])[0]  # Selecting the oldest date
+			self.date = sorted([date_exif, date_c, date_m])[0]  # Selecting the oldest date
 
 		else:
-			date = sorted([date_c, date_m])[0]
-		self.statusBar.showMessage("checked?  {}".format(date))
-		return date
+			self.date = sorted([date_c, date_m])[0]
 
-
-
+	# self.statusBar.showMessage("checked?  {}".format(date))
+	# return self.date
 
 	def clicker(self, checked):
 		self.label_A.setText("Clicked")
@@ -185,9 +225,7 @@ class MyWindow(QMainWindow):
 		self.path_line_A.setClearButtonEnabled(True)
 
 
-
 # initialize The App
 app = QApplication(sys.argv)
 UIWindow = MyWindow()
 app.exec_()
-print("DUpa")
