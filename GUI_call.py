@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, QPushButton, QTreeWidget, QLineEdit, \
+from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, QPushButton, QTreeWidget, \
 	QCheckBox, QStatusBar, QFileDialog, QDialog, QDialogButtonBox
 from PyQt5 import uic
 from PyQt5.QtGui import QIcon, QFont
 from PyQt5.QtCore import QThread, pyqtSignal
 
-import sys, time, os, logging, exifread
+import sys, os, logging, exifread
 from datetime import datetime as dt
 
 # from File_manag import *
@@ -27,7 +27,7 @@ class MyWindow(QMainWindow):
 		self.setWindowIcon(appIcon)
 
 		# Variables
-		self.no_warn = True  # False if time warning dialog window should not appear again
+		self.no_warn = False  # True if time warning dialog window should not appear again
 
 
 		# Define main window Widgets
@@ -59,9 +59,10 @@ class MyWindow(QMainWindow):
 		# Acctions
 		self.browse_A.clicked.connect(lambda: self.browse("A"))  # Browse button A clicked
 		self.browse_B.clicked.connect(lambda: self.browse("B"))  # Browse button B clicked
-		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))
-		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))
-		# Search_thread.progress.connect(self.label_A)
+		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))  # Display files in tree 'A'
+		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # Display files in tree 'B'
+		self.thread.progress.connect(lambda: print("OK"))
+		# self.thread.finished.connect
 
 		MyWindow.exif_check_A.toggled.connect(lambda: self.time_warning("A"))
 		MyWindow.exif_check_B.toggled.connect(lambda: self.time_warning("B"))
@@ -77,31 +78,31 @@ class MyWindow(QMainWindow):
 
 	def time_warning(self, side):
 		"""Display warning dialog"""
-
-		if self.no_warn and (MyWindow.exif_check_A.checkState() or MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
+		MyWindow.side = side
+		if self.no_warn is False and (side == "A" and MyWindow.exif_check_A.checkState() or \
+		side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
 			warning = QDialog()
 			uic.loadUi("Time_warning.ui", warning)  # Loading UI file with Dialog
 			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
 			self.warning_check_box = warning.findChild(QCheckBox, "checkBox")
 
-			self.warning_check_box.toggled.connect(self.block_warning)
-			button_box.accepted.connect(lambda: self.exif_check("Accepted", side))
-			button_box.rejected.connect(lambda: self.exif_check("Rejected", side))
+			button_box.accepted.connect(self.block_warning)
+			button_box.accepted.connect(lambda: self.exif_check("Accepted"))
+			button_box.rejected.connect(lambda: self.exif_check("Rejected"))
 
 			x = warning.exec_()  # Show Dialog window
 
 	def block_warning(self):
+		"""Block time warning dialog from reappearing """
 		if self.warning_check_box.checkState() == 2:
-			self.no_warn = False
+			self.no_warn = True
 
 
-	def exif_check(self, accept, side):
-		"""Uncheck 'exif_check' check box if 'cancel' selected in warning window"""
+	def exif_check(self, accept):
+		"""Unchecks 'exif_check' box if 'cancel' selected in time warning window"""
 
-		if accept == "Accepted":
-			pass
-		else:
-			if side == "A":
+		if accept == "Rejected":
+			if MyWindow.side == "A":
 				MyWindow.exif_check_A.setChecked(False)
 				print("A False")
 			else:
@@ -142,7 +143,7 @@ class MyWindow(QMainWindow):
 			MyWindow.side = "B"  # Variable to be read by 'Search_thread.run'
 
 		self.thread = Search_thread(self)
-		self.thread.started.connect(self.clear_tree)
+		self.clear_tree()
 		self.thread.finished.connect(self.show_files)
 		self.clear_tree()
 		self.thread.start()
@@ -176,6 +177,7 @@ class MyWindow(QMainWindow):
 		self.display_files_B.setEnabled(True)
 
 
+
 """""""""""""""""""   SECOND THREAD   """""""""""""""""""
 
 class Search_thread(QThread):
@@ -198,7 +200,7 @@ class Search_thread(QThread):
 					file_type = os.path.splitext(item)[1]
 					file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
 					size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
-					self.progress.emit(10)
+					self.progress.emit()
 					Search_thread.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
 
 		self.finished.emit()  # Emit signal about finished job

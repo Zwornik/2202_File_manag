@@ -60,9 +60,10 @@ def dateformat(date_string):
 	return date_string
 
 
-# EXTRACTING 3 PICTURE CREATION DATE AND RETURNS THE OLDEST ONE
 
 def oldest_date(path, date_extract):
+	"""EXTRACTING 3 PICTURE CREATION DATES AND RETURNS THE OLDEST ONE"""
+
 	date_m = dateformat(ts_to_dt(os.path.getmtime(path)))  # Modification date
 	date_c = dateformat(ts_to_dt(os.path.getctime(path)))  # File creation date
 
@@ -85,8 +86,9 @@ def oldest_date(path, date_extract):
 	return date
 
 
-# Walking through all files in folder and subfolders
+
 class Walk_folders():
+	"""Walking through all files in folder and subfolders"""
 
 	for path, subdirs, files in os.walk(folder):
 		for item in os.scandir(path):
