@@ -1,8 +1,14 @@
-from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, QPushButton, QTreeWidget, \
-	QCheckBox, QStatusBar, QFileDialog, QDialog, QDialogButtonBox
-from PyQt5 import uic
-from PyQt5.QtGui import QIcon, QFont
+# from PyQt5.QtWidgets import QApplication, QMainWindow, QLabel, QTreeWidgetItem, QPushButton, QTreeWidget, \
+# 	QCheckBox, QStatusBar, QFileDialog, QDialog, QDialogButtonBox, QSplitter, QWidget
+# from PyQt5 import uic, QtCore, Qt
+# from PyQt5.QtGui import QIcon, QFont, QPixmap, QPainter, Qt
 from PyQt5.QtCore import QThread, pyqtSignal
+
+from PyQt5.QtCore import *
+from PyQt5.QtGui import *
+from PyQt5.QtWidgets import *
+from PyQt5 import uic
+
 
 import sys, os, logging, exifread
 from datetime import datetime as dt
@@ -26,6 +32,9 @@ class MyWindow(QMainWindow):
 		appIcon = QIcon("Image\MK_ico.png")
 		self.setWindowIcon(appIcon)
 
+		# Second thread
+		self.thread = Search_thread(self)
+
 		# Variables
 		self.no_warn = False  # True if time warning dialog window should not appear again
 
@@ -36,6 +45,8 @@ class MyWindow(QMainWindow):
 
 		self.path_label_A = self.findChild(QLabel, "path_label_A")
 		self.path_label_B = self.findChild(QLabel, "path_label_B")
+
+		self.image_label = self.findChild(QLabel, "image_view")
 
 		self.browse_A = self.findChild(QPushButton, "Browse_A")
 		self.browse_B = self.findChild(QPushButton, "Browse_B")
@@ -56,12 +67,27 @@ class MyWindow(QMainWindow):
 		self.tree_A = self.findChild(QTreeWidget, "tree_A")
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
+		class Handle(QWidget):
+			def paintEvent(self, e=None):
+				painter = QPainter(self)
+				painter.setPen(Qt.NoPen)
+				painter.setBrush(Qt.Dense6Pattern)
+				painter.drawRect(self.rect())
+
+		self.splitter_2 = self.findChild(QSplitter, "splitter_2")
+		# self.splitter_2.handle(1).setMaximumSize(5, 120)
+		l_handle = Handle()
+		self.splitter_2.addWidget(l_handle)
+		# self.splitter_2.setStyleSheet("QSplitter::handle {image: url(pus.png);}")
+		# self.splitter_2.setStyleSheet("QSplitter::handle:pressed {image: url(pushed.png);}")
+		# self.splitter_2.setStyleSheet("QSplitter::handle:setMaximumSize(3, 120);}")
+
 		# Acctions
 		self.browse_A.clicked.connect(lambda: self.browse("A"))  # Browse button A clicked
 		self.browse_B.clicked.connect(lambda: self.browse("B"))  # Browse button B clicked
 		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))  # Display files in tree 'A'
 		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # Display files in tree 'B'
-		self.thread.progress.connect(lambda: print("OK"))
+		# self.thread.progress.connect(lambda: print("OK"))
 		# self.thread.finished.connect
 
 		MyWindow.exif_check_A.toggled.connect(lambda: self.time_warning("A"))
@@ -72,12 +98,18 @@ class MyWindow(QMainWindow):
 
 		self.path_label_A.setText("C:/TEMP")
 		self.path_label_B.setText("C:/TEMP")
-
+		self.show_image()
 		# Showing the App
 		self.show()
 
+	def show_image(self):
+		img_size = self.image_label.size()
+		print (img_size)
+		image = QPixmap("Tlo.jpg").scaled(img_size, Qt.KeepAspectRatio)
+		self.image_label.setPixmap(image)
+
 	def time_warning(self, side):
-		"""Display warning dialog"""
+		"""Display time warning dialog"""
 		MyWindow.side = side
 		if self.no_warn is False and (side == "A" and MyWindow.exif_check_A.checkState() or \
 		side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
@@ -147,6 +179,8 @@ class MyWindow(QMainWindow):
 		self.thread.finished.connect(self.show_files)
 		self.clear_tree()
 		self.thread.start()
+		self.itemm = self.thread
+		print(self.itemm)
 
 	def clear_tree(self):
 		"""Clear tree and display 'Wait...' in the tree"""
@@ -165,12 +199,12 @@ class MyWindow(QMainWindow):
 		if self.side == "A":  # Display to tree A or B
 
 			self.tree_A.clear()
-			self.tree_A.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
+			self.tree_A.insertTopLevelItems(0, self.thread.items)  # Variable set by 'Search_thread.run'
 			self.label_A.setText("{} files found".format(self.tree_A.topLevelItemCount())) #Display items count in Label
 
 		else:
 			self.tree_B.clear()
-			self.tree_B.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
+			self.tree_B.insertTopLevelItems(0, self.thread.items)  # Variable set by 'Search_thread.run'
 			self.label_B.setText("{} files found".format(self.tree_B.topLevelItemCount())) #Display items count in Label
 
 		self.display_files_A.setEnabled(True)  # Unfreeze buttons
@@ -190,7 +224,7 @@ class Search_thread(QThread):
 		self.path = MyWindow.path  # Variable set in display_btn_clicked
 		self.side = MyWindow.side  # Variable set in display_btn_clicked
 
-		Search_thread.items = []
+		items = []
 		for path, subdirs, files in os.walk(self.path):
 			for item in os.scandir(path):
 				if item.is_file():
@@ -200,10 +234,12 @@ class Search_thread(QThread):
 					file_type = os.path.splitext(item)[1]
 					file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
 					size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
-					self.progress.emit()
-					Search_thread.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+					self.progress.emit(2)
+					items.append(QTreeWidgetItem([name, file_type, size, date, path]))
 
 		self.finished.emit()  # Emit signal about finished job
+		return items
+
 
 	def ts_to_dt(self, ts):
 		"""Transform time stamp to datatime object"""
