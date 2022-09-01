@@ -8,7 +8,7 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
-
+from PyQt5 import QtCore, QtGui, QtWidgets
 
 import sys, os, logging, exifread
 from datetime import datetime as dt
@@ -37,9 +37,11 @@ class MyWindow(QMainWindow):
 
 		# Variables
 		self.no_warn = False  # True if time warning dialog window should not appear again
-
+		self.init_img = "Tlo.jpg"
 
 		# Define main window Widgets
+		self.central_widget = self.findChild(QWidget, "centralwidget")
+
 		self.label_A = self.findChild(QLabel, "label_A")
 		self.label_B = self.findChild(QLabel, "label_B")
 
@@ -52,6 +54,8 @@ class MyWindow(QMainWindow):
 		self.browse_B = self.findChild(QPushButton, "Browse_B")
 		self.display_files_A = self.findChild(QPushButton, "display_files_A")
 		self.display_files_B = self.findChild(QPushButton, "display_files_B")
+		self.cancel_A = self.findChild(QPushButton, "cancel_A")
+		self.cancel_B = self.findChild(QPushButton, "cancel_B")
 		self.find_dup = self.findChild(QPushButton, "find_duplicates")
 		self.delete_A = self.findChild(QPushButton, "delete_A")
 		self.delete_B = self.findChild(QPushButton, "delete_B")
@@ -67,26 +71,31 @@ class MyWindow(QMainWindow):
 		self.tree_A = self.findChild(QTreeWidget, "tree_A")
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
-		class Handle(QWidget):
-			def paintEvent(self, e=None):
-				painter = QPainter(self)
-				painter.setPen(Qt.NoPen)
-				painter.setBrush(Qt.Dense6Pattern)
-				painter.drawRect(self.rect())
-
 		self.splitter_2 = self.findChild(QSplitter, "splitter_2")
-		# self.splitter_2.handle(1).setMaximumSize(5, 120)
-		l_handle = Handle()
-		self.splitter_2.addWidget(l_handle)
-		# self.splitter_2.setStyleSheet("QSplitter::handle {image: url(pus.png);}")
-		# self.splitter_2.setStyleSheet("QSplitter::handle:pressed {image: url(pushed.png);}")
-		# self.splitter_2.setStyleSheet("QSplitter::handle:setMaximumSize(3, 120);}")
+		# class Handle(QWidget):
+		# 	def paintEvent(self, e=None):
+		# 		painter = QPainter(self)
+		# 		painter.setPen(Qt.NoPen)
+		# 		painter.setBrush(Qt.Dense6Pattern)
+		# 		painter.drawRect(self.rect())
+		#
+
+		# # self.splitter_2.handle(1).setMaximumSize(5, 120)
+		# l_handle = Handle()
+		# self.splitter_2.addWidget(l_handle)
+		# # self.splitter_2.setStyleSheet("QSplitter::handle {image: url(pus.png);}")
+		# # self.splitter_2.setStyleSheet("QSplitter::handle:pressed {image: url(pushed.png);}")
+		# # self.splitter_2.setStyleSheet("QSplitter::handle:setMaximumSize(3, 120);}")
 
 		# Acctions
-		self.browse_A.clicked.connect(lambda: self.browse("A"))  # Browse button A clicked
-		self.browse_B.clicked.connect(lambda: self.browse("B"))  # Browse button B clicked
-		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))  # Display files in tree 'A'
-		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # Display files in tree 'B'
+		self.browse_A.clicked.connect(lambda: self.browse("A"))  # 'Browse' button A clicked
+		self.browse_B.clicked.connect(lambda: self.browse("B"))  # 'Browse' button B clicked
+		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))  # 'Display files' in tree 'A'
+		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # 'Display files' in tree 'B'
+		self.cancel_A.clicked.connect(self.cancel_it)  # 'Cancel' file search
+		self.cancel_B.clicked.connect(self.cancel_it)  # 'Cancel' file search
+		self.tree_A.itemActivated.connect(self.select_img)
+		self.tree_B.itemClicked.connect(self.select_img)
 		# self.thread.progress.connect(lambda: print("OK"))
 		# self.thread.finished.connect
 
@@ -95,17 +104,45 @@ class MyWindow(QMainWindow):
 		# self.find_dup.clicked.connect(lambda x: self.browse("A"))  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
 		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
+		self.splitter_2.splitterMoved.connect(lambda: self.show_image(self.init_img))
 
+		# GUI variables
 		self.path_label_A.setText("C:/TEMP")
 		self.path_label_B.setText("C:/TEMP")
-		self.show_image()
+
+		# self.image_label.
+
+		# self.show_image()
 		# Showing the App
 		self.show()
 
-	def show_image(self):
-		img_size = self.image_label.size()
-		print (img_size)
-		image = QPixmap("Tlo.jpg").scaled(img_size, Qt.KeepAspectRatio)
+	def resizeEvent(self, event):
+		"""Action for main window resizing - overriding original Qt method()"""
+		self.show_image(self.init_img)
+		QMainWindow.resizeEvent(self, event)
+
+	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)
+	def select_img(self, it):
+		"""Obtains clicked image and send it to be shown"""
+		print(it.text(0), it.text(4))
+		img = it.text(4)
+		self.init_img = img
+		img.replace("/","\\")
+		self.show_image(img)
+
+	def cancel_it(self):
+		"""Cancel file walk when 'Cancel' btn is hit"""
+		MyWindow.cancel = True
+		print(MyWindow.cancel)
+
+	def show_image(self, img):
+		"""Catch label size and display image in this size"""
+		self.lbl_width = self.image_label.width()  # Catch current label dims
+		self.lbl_height = self.image_label.height()
+
+		self.image_label.resize(self.lbl_width, 2000)  # Show image
+		img_size = self.image_label.size()  # QSize object
+		image = QPixmap(img).scaled(img_size, Qt.KeepAspectRatio)
 		self.image_label.setPixmap(image)
 
 	def time_warning(self, side):
@@ -176,9 +213,8 @@ class MyWindow(QMainWindow):
 
 		self.thread = Search_thread(self)
 		self.clear_tree()
-		self.thread.finished.connect(self.show_files)
-		self.clear_tree()
 		self.thread.start()
+		self.thread.finished.connect(self.show_files)
 		self.itemm = self.thread
 		print(self.itemm)
 
@@ -199,12 +235,12 @@ class MyWindow(QMainWindow):
 		if self.side == "A":  # Display to tree A or B
 
 			self.tree_A.clear()
-			self.tree_A.insertTopLevelItems(0, self.thread.items)  # Variable set by 'Search_thread.run'
+			self.tree_A.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
 			self.label_A.setText("{} files found".format(self.tree_A.topLevelItemCount())) #Display items count in Label
 
 		else:
 			self.tree_B.clear()
-			self.tree_B.insertTopLevelItems(0, self.thread.items)  # Variable set by 'Search_thread.run'
+			self.tree_B.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
 			self.label_B.setText("{} files found".format(self.tree_B.topLevelItemCount())) #Display items count in Label
 
 		self.display_files_A.setEnabled(True)  # Unfreeze buttons
@@ -218,27 +254,37 @@ class Search_thread(QThread):
 	"""WALKING THROUGH ALL FILES IN FOLDER AND SUB FOLDERS"""
 	finished = pyqtSignal()
 	progress = pyqtSignal(int)
+	MyWindow.cancel = False
 
 	def run(self):
 
 		self.path = MyWindow.path  # Variable set in display_btn_clicked
 		self.side = MyWindow.side  # Variable set in display_btn_clicked
 
-		items = []
+		Search_thread.items = []
 		for path, subdirs, files in os.walk(self.path):
 			for item in os.scandir(path):
-				if item.is_file():
-					path = item.path
-					date = self.oldest_date(path)
-					name = item.name
-					file_type = os.path.splitext(item)[1]
-					file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
-					size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
-					self.progress.emit(2)
-					items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+				if MyWindow.cancel == False:
+					print(MyWindow.cancel)
+					if item.is_file():
+						path = item.path
+						date = self.oldest_date(path)
+						name = item.name
+						file_type = os.path.splitext(item)[1]
+						file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
+						size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
+						self.progress.emit(2)
+						Search_thread.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+
+				else:
+					Search_thread.items = []
+					Search_thread.items.append(QTreeWidgetItem(["Canceled..."]))
+					MyWindow.cancel = False
+					self.finished.emit()
+					return
 
 		self.finished.emit()  # Emit signal about finished job
-		return items
+
 
 
 	def ts_to_dt(self, ts):
@@ -278,14 +324,6 @@ class Search_thread(QThread):
 
 	# self.statusBar.showMessage("checked?  {}".format(date))
 	# return self.date
-
-	def clicker(self, checked):
-		self.label_A.setText("Clicked")
-		print(self.path_line_A.text())
-		self.path_line_A.clear()
-		self.path_line_A.setText("Dupa")
-
-		self.path_line_A.setClearButtonEnabled(True)
 
 
 # initialize The App
