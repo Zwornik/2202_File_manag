@@ -49,6 +49,7 @@ class MyWindow(QMainWindow):
 		self.path_label_B = self.findChild(QLabel, "path_label_B")
 
 		self.image_label = self.findChild(QLabel, "image_view")
+		self.image_label.resize(80,2000)
 
 		self.browse_A = self.findChild(QPushButton, "Browse_A")
 		self.browse_B = self.findChild(QPushButton, "Browse_B")
@@ -60,8 +61,8 @@ class MyWindow(QMainWindow):
 		self.delete_A = self.findChild(QPushButton, "delete_A")
 		self.delete_B = self.findChild(QPushButton, "delete_B")
 
-		self.subf_check_A = self.findChild(QCheckBox, "subfolders_A")
-		self.subf_check_B = self.findChild(QCheckBox, "subfolders_B")
+		MyWindow.subf_check_A = self.findChild(QCheckBox, "subfolders_A")
+		MyWindow.subf_check_B = self.findChild(QCheckBox, "subfolders_B")
 		MyWindow.exif_check_A = self.findChild(QCheckBox, "find_EXIF_A")
 		MyWindow.exif_check_B = self.findChild(QCheckBox, "find_EXIF_B")
 
@@ -72,6 +73,7 @@ class MyWindow(QMainWindow):
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
 		self.splitter_2 = self.findChild(QSplitter, "splitter_2")
+		self.splitter_2.setStretchFactor(0,1)
 		# class Handle(QWidget):
 		# 	def paintEvent(self, e=None):
 		# 		painter = QPainter(self)
@@ -94,14 +96,17 @@ class MyWindow(QMainWindow):
 		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # 'Display files' in tree 'B'
 		self.cancel_A.clicked.connect(self.cancel_it)  # 'Cancel' file search
 		self.cancel_B.clicked.connect(self.cancel_it)  # 'Cancel' file search
-		self.tree_A.itemActivated.connect(self.select_img)
+		self.tree_A.itemClicked.connect(self.select_img)
 		self.tree_B.itemClicked.connect(self.select_img)
 		# self.thread.progress.connect(lambda: print("OK"))
 		# self.thread.finished.connect
 
 		MyWindow.exif_check_A.toggled.connect(lambda: self.time_warning("A"))
 		MyWindow.exif_check_B.toggled.connect(lambda: self.time_warning("B"))
-		# self.find_dup.clicked.connect(lambda x: self.browse("A"))  # Find duplicates button clicked
+		MyWindow.subf_check_A.toggled.connect(lambda: print("A"))
+		MyWindow.subf_check_B.toggled.connect(lambda: print("B"))
+
+		self.find_dup.clicked.connect(self.both_trees_ok)  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
 		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
 		self.splitter_2.splitterMoved.connect(lambda: self.show_image(self.init_img))
@@ -116,10 +121,27 @@ class MyWindow(QMainWindow):
 		# Showing the App
 		self.show()
 
-	def resizeEvent(self, event):
-		"""Action for main window resizing - overriding original Qt method()"""
-		self.show_image(self.init_img)
-		QMainWindow.resizeEvent(self, event)
+	def both_trees_ok(self):
+		"""Check if both trees contain items"""
+		if self.tree_A and self.tree_B:
+			print("Comapre trees")
+		else:
+			self.tree_warning()
+
+	def tree_warning(self):
+		MyWindow.side = side
+		if self.no_warn is False and (side == "A" and MyWindow.exif_check_A.checkState() or side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
+			warning = QDialog()
+			uic.loadUi("Tree_warning.ui", warning)  # Loading UI file with Dialog
+			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
+			self.warning_check_box = warning.findChild(QCheckBox,
+													   "checkBox")  # Create instance of 'no more warnings' check box
+
+			button_box.accepted.connect(self.block_warning)
+			button_box.accepted.connect(lambda: self.exif_check("Accepted"))
+			button_box.rejected.connect(lambda: self.exif_check("Rejected"))
+
+			x = warning.exec_()  # Show Dialog window
 
 	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)
 	def select_img(self, it):
@@ -152,8 +174,10 @@ class MyWindow(QMainWindow):
 		side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
 			warning = QDialog()
 			uic.loadUi("Time_warning.ui", warning)  # Loading UI file with Dialog
+			glob = self.mapToGlobal(self.rect().center())  # Get coordinates of the center of main window
+			warning.move(glob - warning.rect().center())  # Move Dialog to the center of main window
 			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
-			self.warning_check_box = warning.findChild(QCheckBox, "checkBox")
+			self.warning_check_box = warning.findChild(QCheckBox, "checkBox")  # Create instance of 'no more warnings' check box
 
 			button_box.accepted.connect(self.block_warning)
 			button_box.accepted.connect(lambda: self.exif_check("Accepted"))
@@ -163,8 +187,8 @@ class MyWindow(QMainWindow):
 
 	def block_warning(self):
 		"""Block time warning dialog from reappearing """
-		if self.warning_check_box.checkState() == 2:
-			self.no_warn = True
+		if self.warning_check_box.checkState() == 2:  # Verify 'no more warnings' check box is checked
+			self.no_warn = True  # Set not more warnings
 
 
 	def exif_check(self, accept):
@@ -311,10 +335,11 @@ class Search_thread(QThread):
 				tags = exifread.process_file(file, stop_tag="EXIF DateTimeOriginal")
 				date_exif = str(tags["EXIF DateTimeOriginal"])  # Picture taken date
 			except:
-				date_exif = "Z"
+				date_exif = "EXIF date unavailable"
 				pass
 			else:
-				date_exif = date_exif[:4] + "." + date_exif[5:7] + "." + date_exif[8:] + " exif"  # replacing ':' with '.' in date format
+				date_exif = date_exif.replace(":", ".", 2) + " EXIF"  # Format EXIF date
+
 			date = sorted([date_exif, date_c, date_m])[0]  # Selecting the oldest date
 
 		else:
