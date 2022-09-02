@@ -6,4 +6,4 @@ I needed a file manager able to find duplicates between two selected folders (in
 
 Also, the program can extract the latest date from picture EXIF metadata, compare it with dates provided by Windows and display the oldest. 
 
-The app is written in Python which communicates with GUI through QT Widgets from the PyQt5 module. The GUI was created in QT Designer.
+The app is written in Python which communicates with GUI through QT Widgets from the PyQt5 module. The GUI layout was created in QT Designer.
