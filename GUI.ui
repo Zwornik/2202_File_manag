@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>873</width>
-    <height>836</height>
+    <width>887</width>
+    <height>950</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -27,6 +27,12 @@
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <property name="leftMargin">
+     <number>9</number>
+    </property>
+    <property name="rightMargin">
+     <number>9</number>
+    </property>
     <item>
      <widget class="QFrame" name="frame">
       <property name="sizePolicy">
@@ -133,7 +139,10 @@
        </sizepolicy>
       </property>
       <property name="autoFillBackground">
-       <bool>true</bool>
+       <bool>false</bool>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::NoFrame</enum>
       </property>
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
@@ -470,63 +479,6 @@
                 <string>Path</string>
                </property>
               </column>
-              <item>
-               <property name="text">
-                <string>New Item</string>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <property name="text">
-                <string/>
-               </property>
-               <item>
-                <property name="text">
-                 <string>New Subitem</string>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-               </item>
-              </item>
-              <item>
-               <property name="text">
-                <string>bbbb</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>aaaa</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>1111</string>
-               </property>
-              </item>
-              <item>
-               <property name="text">
-                <string>&quot;cccc&quot; &quot;dup&quot;</string>
-               </property>
-               <property name="textAlignment">
-                <set>AlignTrailing|AlignVCenter</set>
-               </property>
-              </item>
              </widget>
             </item>
             <item>
@@ -973,9 +925,12 @@
        </property>
        <property name="minimumSize">
         <size>
-         <width>135</width>
+         <width>80</width>
          <height>0</height>
         </size>
+       </property>
+       <property name="focusPolicy">
+        <enum>Qt::NoFocus</enum>
        </property>
        <property name="frameShape">
         <enum>QFrame::Box</enum>
@@ -991,6 +946,9 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
+       </property>
+       <property name="wordWrap">
+        <bool>true</bool>
        </property>
       </widget>
      </widget>

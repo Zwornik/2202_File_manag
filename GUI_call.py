@@ -57,6 +57,9 @@ class MyWindow(QMainWindow):
 		self.display_files_B = self.findChild(QPushButton, "display_files_B")
 		self.cancel_A = self.findChild(QPushButton, "cancel_A")
 		self.cancel_B = self.findChild(QPushButton, "cancel_B")
+		self.cancel_A.setEnabled(False)  # Freeze buttons
+		self.cancel_B.setEnabled(False)
+
 		self.find_dup = self.findChild(QPushButton, "find_duplicates")
 		self.delete_A = self.findChild(QPushButton, "delete_A")
 		self.delete_B = self.findChild(QPushButton, "delete_B")
@@ -73,7 +76,7 @@ class MyWindow(QMainWindow):
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
 		self.splitter_2 = self.findChild(QSplitter, "splitter_2")
-		self.splitter_2.setStretchFactor(0,1)
+		self.splitter_2.setStretchFactor(0,1)  # Make image area NOT resizing with main window  
 		# class Handle(QWidget):
 		# 	def paintEvent(self, e=None):
 		# 		painter = QPainter(self)
@@ -106,7 +109,7 @@ class MyWindow(QMainWindow):
 		MyWindow.subf_check_A.toggled.connect(lambda: print("A"))
 		MyWindow.subf_check_B.toggled.connect(lambda: print("B"))
 
-		self.find_dup.clicked.connect(self.both_trees_ok)  # Find duplicates button clicked
+		self.find_dup.clicked.connect(self.both_folders_ok)  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
 		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
 		self.splitter_2.splitterMoved.connect(lambda: self.show_image(self.init_img))
@@ -121,33 +124,36 @@ class MyWindow(QMainWindow):
 		# Showing the App
 		self.show()
 
-	def both_trees_ok(self):
-		"""Check if both trees contain items"""
-		if self.tree_A and self.tree_B:
+	def both_folders_ok(self):
+		"""Check if both folders were selected"""
+		if self.path_label_A.text() and self.path_label_B.text():
 			print("Comapre trees")
 		else:
-			self.tree_warning()
+			self.info_dialog("Please select folders for both locations")  # Show message in dialog window
 
-	def tree_warning(self):
-		MyWindow.side = side
-		if self.no_warn is False and (side == "A" and MyWindow.exif_check_A.checkState() or side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
-			warning = QDialog()
-			uic.loadUi("Tree_warning.ui", warning)  # Loading UI file with Dialog
-			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
-			self.warning_check_box = warning.findChild(QCheckBox,
-													   "checkBox")  # Create instance of 'no more warnings' check box
 
-			button_box.accepted.connect(self.block_warning)
-			button_box.accepted.connect(lambda: self.exif_check("Accepted"))
-			button_box.rejected.connect(lambda: self.exif_check("Rejected"))
+	def info_dialog(self, message):
+		"""Dialog window with message and 'OK' button"""
 
-			x = warning.exec_()  # Show Dialog window
+		info_dialog_obj = QDialog()
+		uic.loadUi("Info_dialog.ui", info_dialog_obj)  # Loading UI file with Dialog
+		glob = self.mapToGlobal(self.rect().center())  # Get coordinates of the center of main window
+		info_dialog_obj.move(glob - info_dialog_obj.rect().center())  # Move Dialog to the center of main window
 
-	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)
+		button_OK = info_dialog_obj.findChild(QPushButton, "button_OK")
+		button_OK.clicked.connect(lambda: info_dialog_obj.close())  # Close dialog when clicked
+
+		info_label = info_dialog_obj.findChild(QLabel, "label")
+		info_label.setText(message)  # Display message in the label
+
+		x = info_dialog_obj.exec_()  # Show Dialog window
+
+
+	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)  # Send select_img to pyqtSlot method to obtain selected item 'it'
 	def select_img(self, it):
 		"""Obtains clicked image and send it to be shown"""
 		print(it.text(0), it.text(4))
-		img = it.text(4)
+		img = it.text(4)  # file path
 		self.init_img = img
 		img.replace("/","\\")
 		self.show_image(img)
@@ -155,6 +161,8 @@ class MyWindow(QMainWindow):
 	def cancel_it(self):
 		"""Cancel file walk when 'Cancel' btn is hit"""
 		MyWindow.cancel = True
+		self.cancel_A.setEnabled(False)
+		self.cancel_B.setEnabled(False)
 		print(MyWindow.cancel)
 
 	def show_image(self, img):
@@ -162,10 +170,10 @@ class MyWindow(QMainWindow):
 		self.lbl_width = self.image_label.width()  # Catch current label dims
 		self.lbl_height = self.image_label.height()
 
-		self.image_label.resize(self.lbl_width, 2000)  # Show image
+		self.image_label.resize(self.lbl_width, 2000)  # Resize label
 		img_size = self.image_label.size()  # QSize object
-		image = QPixmap(img).scaled(img_size, Qt.KeepAspectRatio)
-		self.image_label.setPixmap(image)
+		image = QPixmap(img).scaled(img_size, Qt.KeepAspectRatio)  # Assign image to QPixmap object with size and keep ratio
+		self.image_label.setPixmap(image)  # Show image in the label
 
 	def time_warning(self, side):
 		"""Display time warning dialog"""
@@ -180,7 +188,6 @@ class MyWindow(QMainWindow):
 			self.warning_check_box = warning.findChild(QCheckBox, "checkBox")  # Create instance of 'no more warnings' check box
 
 			button_box.accepted.connect(self.block_warning)
-			button_box.accepted.connect(lambda: self.exif_check("Accepted"))
 			button_box.rejected.connect(lambda: self.exif_check("Rejected"))
 
 			x = warning.exec_()  # Show Dialog window
@@ -194,13 +201,10 @@ class MyWindow(QMainWindow):
 	def exif_check(self, accept):
 		"""Unchecks 'exif_check' box if 'cancel' selected in time warning window"""
 
-		if accept == "Rejected":
-			if MyWindow.side == "A":
-				MyWindow.exif_check_A.setChecked(False)
-				print("A False")
-			else:
-				MyWindow.exif_check_B.setChecked(False)
-				print("B False")
+		if MyWindow.side == "A":
+			MyWindow.exif_check_A.setChecked(False)
+		else:
+			MyWindow.exif_check_B.setChecked(False)
 
 
 	def browse(self, side):
@@ -223,8 +227,11 @@ class MyWindow(QMainWindow):
 		variables:
 		- side - determines on which side information is going to be displayed, obtained, widget activated
 		- path - search path for files"""
-		self.display_files_A.setEnabled(False)  # Freeze button
-		self.display_files_B.setEnabled(False)  # Freeze button
+		self.display_files_A.setEnabled(False)  # Freeze 'Display' buttons
+		self.display_files_B.setEnabled(False)
+		self.cancel_A.setEnabled(True)  # Unlock 'Cancel' buttons
+		self.cancel_B.setEnabled(True)
+
 		self.side = side
 
 		if side == "A":  #Send 'path' and 'side' to 'Search_thread' class
@@ -240,7 +247,7 @@ class MyWindow(QMainWindow):
 		self.thread.start()
 		self.thread.finished.connect(self.show_files)
 		self.itemm = self.thread
-		print(self.itemm)
+
 
 	def clear_tree(self):
 		"""Clear tree and display 'Wait...' in the tree"""
@@ -289,7 +296,6 @@ class Search_thread(QThread):
 		for path, subdirs, files in os.walk(self.path):
 			for item in os.scandir(path):
 				if MyWindow.cancel == False:
-					print(MyWindow.cancel)
 					if item.is_file():
 						path = item.path
 						date = self.oldest_date(path)
@@ -307,7 +313,7 @@ class Search_thread(QThread):
 					self.finished.emit()
 					return
 
-		self.finished.emit()  # Emit signal about finished job
+		self.finished.emit()  # Emit signal about finished file walk
 
 
 
