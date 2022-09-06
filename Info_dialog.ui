@@ -50,7 +50,7 @@
     </font>
    </property>
    <property name="text">
-    <string>Please select folders for both locations</string>
+    <string/>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
