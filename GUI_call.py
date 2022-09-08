@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import sys, os, logging, exifread
+import sys, os, logging, exifread, time
 from datetime import datetime as dt
 
 # from File_manag import *
@@ -22,22 +22,29 @@ class MyWindow(QMainWindow):
 	def __init__(self):
 		super(MyWindow, self).__init__()
 
-		"""Set up interface and all Widegets"""
+		"""Set up interface and all Widgets"""
 
-		self.setGeometry(200, 200, 600, 450)
-		# Loadu .ui file
+		# Load interface from .ui file
 		uic.loadUi("GUI.ui", self)
 
-		# Setting the main window icon
+		# Move main window to the center of the screen
+		qtRectangle = self.frameGeometry()
+		centerPiont = QDesktopWidget().availableGeometry().center()
+		qtRectangle.moveCenter(centerPiont)
+		self.move(qtRectangle.topLeft())
+
+		# Set the main window icon
 		appIcon = QIcon("Image\MK_ico.png")
 		self.setWindowIcon(appIcon)
-
-		# Second thread
-		self.thread = Search_thread(self)
 
 		# Variables
 		self.no_warn = False  # True if time warning dialog window should not appear again
 		self.init_img = "Tlo.jpg"
+		self.sub_yes = False  # True if walk through files should include sub folders
+		self.path = "C:/TEMP"
+
+		# Second thread
+		self.thread = Search_thread(self.path, self.sub_yes)
 
 		# Define main window Widgets
 		self.central_widget = self.findChild(QWidget, "centralwidget")
@@ -76,7 +83,7 @@ class MyWindow(QMainWindow):
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
 		self.splitter_2 = self.findChild(QSplitter, "splitter_2")
-		self.splitter_2.setStretchFactor(0,1)  # Make image area NOT resizing with main window  
+		self.splitter_2.setStretchFactor(0,1)  # Make image area NOT resizing with main window
 		# class Handle(QWidget):
 		# 	def paintEvent(self, e=None):
 		# 		painter = QPainter(self)
@@ -106,8 +113,8 @@ class MyWindow(QMainWindow):
 
 		MyWindow.exif_check_A.toggled.connect(lambda: self.time_warning("A"))
 		MyWindow.exif_check_B.toggled.connect(lambda: self.time_warning("B"))
-		MyWindow.subf_check_A.toggled.connect(lambda: print("A"))
-		MyWindow.subf_check_B.toggled.connect(lambda: print("B"))
+		MyWindow.subf_check_A.toggled.connect(lambda: self.subforders("A"))
+		MyWindow.subf_check_B.toggled.connect(lambda: self.subforders("B"))
 
 		self.find_dup.clicked.connect(self.both_folders_ok)  # Find duplicates button clicked
 		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
@@ -115,14 +122,23 @@ class MyWindow(QMainWindow):
 		self.splitter_2.splitterMoved.connect(lambda: self.show_image(self.init_img))
 
 		# GUI variables
-		self.path_label_A.setText("C:/TEMP")
-		self.path_label_B.setText("C:/TEMP")
+		self.path_label_A.setText(self.path)
+		self.path_label_B.setText(self.path)
 
 		# self.image_label.
 
 		# self.show_image()
 		# Showing the App
 		self.show()
+
+	def subforders(self, side):
+		if side == "A" and MyWindow.subf_check_A.checkState() or side == "B" and MyWindow.subf_check_B.checkState():
+			self.sub_yes = True
+			print(True)
+		else:
+			self.sub_yes = False
+			print(False)
+
 
 	def both_folders_ok(self):
 		"""Check if both folders were selected"""
@@ -163,7 +179,7 @@ class MyWindow(QMainWindow):
 		MyWindow.cancel = True
 		self.cancel_A.setEnabled(False)
 		self.cancel_B.setEnabled(False)
-		print(MyWindow.cancel)
+		print("CANCEL ", MyWindow.cancel)
 
 	def show_image(self, img):
 		"""Catch label size and display image in this size"""
@@ -179,7 +195,7 @@ class MyWindow(QMainWindow):
 		"""Display time warning dialog"""
 		MyWindow.side = side
 		if self.no_warn is False and (side == "A" and MyWindow.exif_check_A.checkState() or \
-		side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of checkboxes is checked
+		side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of EXIF checkboxes is checked
 			warning = QDialog()
 			uic.loadUi("Time_warning.ui", warning)  # Loading UI file with Dialog
 			glob = self.mapToGlobal(self.rect().center())  # Get coordinates of the center of main window
@@ -235,18 +251,17 @@ class MyWindow(QMainWindow):
 		self.side = side
 
 		if side == "A":  #Send 'path' and 'side' to 'Search_thread' class
-			MyWindow.path = self.path_label_A.text()  # Variable to be read by 'Search_thread.run'
-			MyWindow.side = "A"  # Variable to be read by 'Search_thread.run'
+			path = self.path_label_A.text()  # Read PATH from label and send 'Search_thread.run' ????????
+			Search_thread.side = "A"  # Variable to be read by 'Search_thread.run'
 
 		else:
-			MyWindow.path = self.path_label_B.text()  # Variable to be read by 'Search_thread.run'
-			MyWindow.side = "B"  # Variable to be read by 'Search_thread.run'
+			path = self.path_label_B.text()  # Variable to be read by 'Search_thread.run' ?????????
+			Search_thread.side = "B"  # Variable to be read by 'Search_thread.run'
 
-		self.thread = Search_thread(self)
+		self.thread = Search_thread(path, self.sub_yes)
 		self.clear_tree()
 		self.thread.start()
 		self.thread.finished.connect(self.show_files)
-		self.itemm = self.thread
 
 
 	def clear_tree(self):
@@ -262,16 +277,21 @@ class MyWindow(QMainWindow):
 
 	def show_files(self):
 		"""Display files in corresponding tree and count in label"""
+		# Search_thread.quit()
+
+		print("DISPLAYJJJJJJJJJJJJJJJJ")
+		MyWindow.cancel = False
+		# Search_thread.quit()
 
 		if self.side == "A":  # Display to tree A or B
 
 			self.tree_A.clear()
-			self.tree_A.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
+			self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
 			self.label_A.setText("{} files found".format(self.tree_A.topLevelItemCount())) #Display items count in Label
 
 		else:
 			self.tree_B.clear()
-			self.tree_B.insertTopLevelItems(0, Search_thread.items)  # Variable set by 'Search_thread.run'
+			self.tree_B.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
 			self.label_B.setText("{} files found".format(self.tree_B.topLevelItemCount())) #Display items count in Label
 
 		self.display_files_A.setEnabled(True)  # Unfreeze buttons
@@ -287,34 +307,84 @@ class Search_thread(QThread):
 	progress = pyqtSignal(int)
 	MyWindow.cancel = False
 
+	def __init__(self, path, sub_yes):
+		super().__init__()
+		self.path = path
+		self.sub_yes = sub_yes
+		print("Start path: ", path)
+		MyWindow.items = []
+	# path = MyWindow.path  # Variable set in display_btn_clicked
+	# sub_yes = MyWindow.sub_yes
+
 	def run(self):
+		print("Start:  ", self.path)
+		print("SUBS: ", self.sub_yes)
+		print("Items: ", len(MyWindow.items))
+		if MyWindow.cancel:
+			return
+		MyWindow.items = []
 
-		self.path = MyWindow.path  # Variable set in display_btn_clicked
-		self.side = MyWindow.side  # Variable set in display_btn_clicked
-
-		Search_thread.items = []
-		for path, subdirs, files in os.walk(self.path):
-			for item in os.scandir(path):
-				if MyWindow.cancel == False:
+		def scan():
+			with os.scandir(self.path) as folder:
+				print(folder)
+				for item in folder:
+					self.path = item.path
 					if item.is_file():
-						path = item.path
-						date = self.oldest_date(path)
-						name = item.name
-						file_type = os.path.splitext(item)[1]
-						file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
-						size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
-						self.progress.emit(2)
-						Search_thread.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+						print("File path: ", self.path)
+						self.get_file_data(item)
+					elif item.is_dir() and self.sub_yes:
+						print("Dir path: ", self.path)
+						scan()
+					if MyWindow.cancel:  # Stop if 'Cancel' button pushed #True
+						MyWindow.items = []
+						MyWindow.items.append(QTreeWidgetItem(["Canceled..."]))
+						self.finished.emit()
+						return
+						# Search_thread.quit(self)
+			# self.emit_finish()
+			# Search_thread.quit(self)
+			print("Items 2:  ", len(MyWindow.items), MyWindow.items)
+			self.finished.emit()
+			return
 
-				else:
-					Search_thread.items = []
-					Search_thread.items.append(QTreeWidgetItem(["Canceled..."]))
-					MyWindow.cancel = False
-					self.finished.emit()
-					return
+		if MyWindow.items != []:
+			self.finished.emit()
+			return
+		scan()
+		#
+		# return scan()
 
+	def emit_finish(self):
+		print("FINISH !")
+		MyWindow.cancel = False
 		self.finished.emit()  # Emit signal about finished file walk
+		# Search_thread.quit(self)
+		# self.wait()
 
+	def get_file_data(self, item):
+		"""Extract data from a file in 'item' object"""
+		date = self.oldest_date(self.path)
+		path = item.path
+		name = item.name
+		file_type = os.path.splitext(item)[1]
+		file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
+		size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
+		self.progress.emit(2)
+		MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+
+	# def walk(path, sub_yes):
+	# 	with os.scandir(path) as folder:
+	# 		for item in folder:
+	# 			if sub_yes:
+	# 				if item.is_dir():
+	# 					path = item.path
+	# 					print("path: ", path)
+	# 					walk(path, sub_yes)
+	# 				elif item.is_file:
+	#
+	# 					print(item.path)
+	# 			else:
+	# 				print(item.path)
 
 
 	def ts_to_dt(self, ts):
@@ -353,7 +423,8 @@ class Search_thread(QThread):
 
 		return date
 
-	# self.statusBar.showMessage("checked?  {}".format(date))
+
+# self.statusBar.showMessage("checked?  {}".format(date))
 	# return self.date
 
 
