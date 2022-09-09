@@ -43,9 +43,6 @@ class MyWindow(QMainWindow):
 		self.sub_yes = False  # True if walk through files should include sub folders
 		self.path = "C:/TEMP"
 
-		# Second thread
-		self.thread = Search_thread(self.path, self.sub_yes)
-
 		# Define main window Widgets
 		self.central_widget = self.findChild(QWidget, "centralwidget")
 
@@ -56,7 +53,7 @@ class MyWindow(QMainWindow):
 		self.path_label_B = self.findChild(QLabel, "path_label_B")
 
 		self.image_label = self.findChild(QLabel, "image_view")
-		self.image_label.resize(80,2000)
+		self.image_label.resize(80, 2000)
 
 		self.browse_A = self.findChild(QPushButton, "Browse_A")
 		self.browse_B = self.findChild(QPushButton, "Browse_B")
@@ -83,7 +80,7 @@ class MyWindow(QMainWindow):
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
 
 		self.splitter_2 = self.findChild(QSplitter, "splitter_2")
-		self.splitter_2.setStretchFactor(0,1)  # Make image area NOT resizing with main window
+		self.splitter_2.setStretchFactor(0, 1)  # Make image area NOT resizing with main window
 		# class Handle(QWidget):
 		# 	def paintEvent(self, e=None):
 		# 		painter = QPainter(self)
@@ -139,14 +136,12 @@ class MyWindow(QMainWindow):
 			self.sub_yes = False
 			print(False)
 
-
 	def both_folders_ok(self):
 		"""Check if both folders were selected"""
 		if self.path_label_A.text() and self.path_label_B.text():
 			print("Comapre trees")
 		else:
 			self.info_dialog("Please select folders for both locations")  # Show message in dialog window
-
 
 	def info_dialog(self, message):
 		"""Dialog window with message and 'OK' button"""
@@ -164,22 +159,23 @@ class MyWindow(QMainWindow):
 
 		x = info_dialog_obj.exec_()  # Show Dialog window
 
-
 	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)  # Send select_img to pyqtSlot method to obtain selected item 'it'
 	def select_img(self, it):
 		"""Obtains clicked image and send it to be shown"""
 		print(it.text(0), it.text(4))
 		img = it.text(4)  # file path
 		self.init_img = img
-		img.replace("/","\\")
+		img.replace("/", "\\")
 		self.show_image(img)
 
 	def cancel_it(self):
 		"""Cancel file walk when 'Cancel' btn is hit"""
-		MyWindow.cancel = True
+		print("CANCEL ")
 		self.cancel_A.setEnabled(False)
 		self.cancel_B.setEnabled(False)
-		print("CANCEL ", MyWindow.cancel)
+		self.thread.stop()
+		self.thread.wait()
+
 
 	def show_image(self, img):
 		"""Catch label size and display image in this size"""
@@ -188,20 +184,22 @@ class MyWindow(QMainWindow):
 
 		self.image_label.resize(self.lbl_width, 2000)  # Resize label
 		img_size = self.image_label.size()  # QSize object
-		image = QPixmap(img).scaled(img_size, Qt.KeepAspectRatio)  # Assign image to QPixmap object with size and keep ratio
+		image = QPixmap(img).scaled(img_size,
+									Qt.KeepAspectRatio)  # Assign image to QPixmap object with size and keep ratio
 		self.image_label.setPixmap(image)  # Show image in the label
 
 	def time_warning(self, side):
 		"""Display time warning dialog"""
 		MyWindow.side = side
 		if self.no_warn is False and (side == "A" and MyWindow.exif_check_A.checkState() or \
-		side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of EXIF checkboxes is checked
+									  side == "B" and MyWindow.exif_check_B.checkState()):  # Verify if any of EXIF checkboxes is checked
 			warning = QDialog()
 			uic.loadUi("Time_warning.ui", warning)  # Loading UI file with Dialog
 			glob = self.mapToGlobal(self.rect().center())  # Get coordinates of the center of main window
 			warning.move(glob - warning.rect().center())  # Move Dialog to the center of main window
 			button_box = warning.findChild(QDialogButtonBox, "buttonBox")
-			self.warning_check_box = warning.findChild(QCheckBox, "checkBox")  # Create instance of 'no more warnings' check box
+			self.warning_check_box = warning.findChild(QCheckBox,
+													   "checkBox")  # Create instance of 'no more warnings' check box
 
 			button_box.accepted.connect(self.block_warning)
 			button_box.rejected.connect(lambda: self.exif_check("Rejected"))
@@ -213,7 +211,6 @@ class MyWindow(QMainWindow):
 		if self.warning_check_box.checkState() == 2:  # Verify 'no more warnings' check box is checked
 			self.no_warn = True  # Set not more warnings
 
-
 	def exif_check(self, accept):
 		"""Unchecks 'exif_check' box if 'cancel' selected in time warning window"""
 
@@ -221,7 +218,6 @@ class MyWindow(QMainWindow):
 			MyWindow.exif_check_A.setChecked(False)
 		else:
 			MyWindow.exif_check_B.setChecked(False)
-
 
 	def browse(self, side):
 		"""Opens dialog selecting folder location"""
@@ -236,7 +232,8 @@ class MyWindow(QMainWindow):
 	def display_path(self, path):
 		"""Display selected path in corresponding label"""
 
-		self.path_label_A.setText(path) if self.side == "A" else self.path_label_B.setText(path)  # Display path to tree A or B
+		self.path_label_A.setText(path) if self.side == "A" else self.path_label_B.setText(
+			path)  # Display path to tree A or B
 
 	def display_btn_clicked(self, side):
 		"""Establish new thread and communication with it
@@ -250,7 +247,7 @@ class MyWindow(QMainWindow):
 
 		self.side = side
 
-		if side == "A":  #Send 'path' and 'side' to 'Search_thread' class
+		if side == "A":  # Send 'path' and 'side' to 'Search_thread' class
 			path = self.path_label_A.text()  # Read PATH from label and send 'Search_thread.run' ????????
 			Search_thread.side = "A"  # Variable to be read by 'Search_thread.run'
 
@@ -258,10 +255,10 @@ class MyWindow(QMainWindow):
 			path = self.path_label_B.text()  # Variable to be read by 'Search_thread.run' ?????????
 			Search_thread.side = "B"  # Variable to be read by 'Search_thread.run'
 
-		self.thread = Search_thread(path, self.sub_yes)
+		self.thread = Search_thread(path, self.sub_yes, self.side)  # Initialize new thread
 		self.clear_tree()
-		self.thread.start()
 		self.thread.finished.connect(self.show_files)
+		self.thread.start()
 
 
 	def clear_tree(self):
@@ -277,115 +274,93 @@ class MyWindow(QMainWindow):
 
 	def show_files(self):
 		"""Display files in corresponding tree and count in label"""
-		# Search_thread.quit()
-
 		print("DISPLAYJJJJJJJJJJJJJJJJ")
-		MyWindow.cancel = False
 		# Search_thread.quit()
 
 		if self.side == "A":  # Display to tree A or B
 
 			self.tree_A.clear()
 			self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
-			self.label_A.setText("{} files found".format(self.tree_A.topLevelItemCount())) #Display items count in Label
+			self.label_A.setText(
+				"{} files found".format(self.tree_A.topLevelItemCount()))  # Display items count in Label
 
 		else:
 			self.tree_B.clear()
 			self.tree_B.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
-			self.label_B.setText("{} files found".format(self.tree_B.topLevelItemCount())) #Display items count in Label
+			self.label_B.setText(
+				"{} files found".format(self.tree_B.topLevelItemCount()))  # Display items count in Label
 
 		self.display_files_A.setEnabled(True)  # Unfreeze buttons
 		self.display_files_B.setEnabled(True)
 
 
-
-"""""""""""""""""""   SECOND THREAD   """""""""""""""""""
+"----------------------SECOND THREAD---------------------"
 
 class Search_thread(QThread):
 	"""WALKING THROUGH ALL FILES IN FOLDER AND SUB FOLDERS"""
 	finished = pyqtSignal()
 	progress = pyqtSignal(int)
-	MyWindow.cancel = False
 
-	def __init__(self, path, sub_yes):
+	def __init__(self, path, sub_yes, dupa):
 		super().__init__()
+		self.runs = True
 		self.path = path
 		self.sub_yes = sub_yes
+		self.side = dupa
 		print("Start path: ", path)
+		print("Side start: ", self.side)
 		MyWindow.items = []
+
 	# path = MyWindow.path  # Variable set in display_btn_clicked
 	# sub_yes = MyWindow.sub_yes
 
-	def run(self):
-		print("Start:  ", self.path)
-		print("SUBS: ", self.sub_yes)
-		print("Items: ", len(MyWindow.items))
-		if MyWindow.cancel:
-			return
+	def run(self):  # QThread default starting function
+		self.scan(self.path)
+		self.stop()
+		self.finished.emit()
+
+	def stop(self):  # stop scan() job
+		self.runs = False
 		MyWindow.items = []
+		print("CancelLLLL")
+		MyWindow.items.append(QTreeWidgetItem(["Canceled..."]))
 
-		def scan():
-			with os.scandir(self.path) as folder:
-				print(folder)
-				for item in folder:
-					self.path = item.path
-					if item.is_file():
-						print("File path: ", self.path)
-						self.get_file_data(item)
-					elif item.is_dir() and self.sub_yes:
-						print("Dir path: ", self.path)
-						scan()
-					if MyWindow.cancel:  # Stop if 'Cancel' button pushed #True
-						MyWindow.items = []
-						MyWindow.items.append(QTreeWidgetItem(["Canceled..."]))
-						self.finished.emit()
-						return
-						# Search_thread.quit(self)
-			# self.emit_finish()
-			# Search_thread.quit(self)
-			print("Items 2:  ", len(MyWindow.items), MyWindow.items)
-			self.finished.emit()
-			return
 
-		if MyWindow.items != []:
-			self.finished.emit()
-			return
-		scan()
-		#
-		# return scan()
+	def scan(self, path):
+		print("path: ", path)
+		print("Runs: ", self.runs)
+		with os.scandir(path) as folder:
 
-	def emit_finish(self):
-		print("FINISH !")
-		MyWindow.cancel = False
-		self.finished.emit()  # Emit signal about finished file walk
-		# Search_thread.quit(self)
-		# self.wait()
+			for item in folder:
+				print("going: ", item.path)
+				if self.runs:
+					# for i in range(1):
+					# 	time.sleep(0.5)
+					if MyWindow.subf_check_A.checkState() or MyWindow.subf_check_B.checkState():
+						if item.is_dir():
+							print("DIR: ", path)
+							path = item.path
+							self.scan(path)
+						elif item.is_file():
+							print("FIle: ", item.path)
+							self.get_file_data(item)
+					else:
+						if item.is_file():
+							print("le: ", item.name)
+							self.get_file_data(item)
 
 	def get_file_data(self, item):
 		"""Extract data from a file in 'item' object"""
-		date = self.oldest_date(self.path)
-		path = item.path
-		name = item.name
-		file_type = os.path.splitext(item)[1]
-		file_date = self.dateformat(self.ts_to_dt(item.stat().st_atime))
-		size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
-		self.progress.emit(2)
-		MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
-
-	# def walk(path, sub_yes):
-	# 	with os.scandir(path) as folder:
-	# 		for item in folder:
-	# 			if sub_yes:
-	# 				if item.is_dir():
-	# 					path = item.path
-	# 					print("path: ", path)
-	# 					walk(path, sub_yes)
-	# 				elif item.is_file:
-	#
-	# 					print(item.path)
-	# 			else:
-	# 				print(item.path)
-
+		if self.runs:
+			path = item.path
+			name = item.name
+			file_type = os.path.splitext(item)[1]
+			date = self.get_date(path)
+			size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
+			self.progress.emit(2)
+			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+		else:
+			return
 
 	def ts_to_dt(self, ts):
 		"""Transform time stamp to datatime object"""
@@ -396,37 +371,35 @@ class Search_thread(QThread):
 		date_string = date_string.strftime("%Y.%m.%d %H:%M:%S")
 		return date_string
 
-	def oldest_date(self, path):
+	def get_date(self, path):
 		"""EXTRACT 3 PICTURE CREATION DATES AND RETURNS THE OLDEST ONE"""
 
-		# print(self.exif_check_A.checkState())
-		date_m = self.dateformat(self.ts_to_dt(os.path.getmtime(path)))  # Modification date
-		date_c = self.dateformat(self.ts_to_dt(os.path.getctime(path)))  # File creation date
+		date_m = self.dateformat(self.ts_to_dt(os.path.getmtime(path)))  # Windows modification date
+		date_c = self.dateformat(self.ts_to_dt(os.path.getctime(path)))  # Windows file creation date
 
+		# Get EXIF date depending on 'Extract EXIF date' checked
 		if self.side == "A" and MyWindow.exif_check_A.checkState() or self.side == "B" and MyWindow.exif_check_B.checkState():
-
-			# reading EXIF date
-			try:
-				file = open(path, 'rb')  # opens file to check if EXIF tag is there with date of picture taken
-				tags = exifread.process_file(file, stop_tag="EXIF DateTimeOriginal")
-				date_exif = str(tags["EXIF DateTimeOriginal"])  # Picture taken date
-			except:
-				date_exif = "EXIF date unavailable"
-				pass
-			else:
-				date_exif = date_exif.replace(":", ".", 2) + " EXIF"  # Format EXIF date
-
+			date_exif = self.get_exif_date(path)
 			date = sorted([date_exif, date_c, date_m])[0]  # Selecting the oldest date
-
 		else:
 			date = sorted([date_c, date_m])[0]
-
 		return date
 
+	def get_exif_date(self, path):
+		"""reading EXIF date"""
+		try:
+			file = open(path, 'rb')  # opens file to check if EXIF tag is there with date of picture taken
+			tags = exifread.process_file(file, stop_tag="EXIF DateTimeOriginal")
+			date_exif = str(tags["EXIF DateTimeOriginal"])  # Picture taken date
+		except:
+			date_exif = "EXIF date unavailable"
+			pass
+		else:
+			date_exif = date_exif.replace(":", ".", 2) + " EXIF"  # Format EXIF date
+
+		return date_exif
 
 # self.statusBar.showMessage("checked?  {}".format(date))
-	# return self.date
-
 
 # initialize The App
 app = QApplication(sys.argv)
