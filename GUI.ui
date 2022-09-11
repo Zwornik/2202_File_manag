@@ -9,7 +9,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>887</width>
+    <width>1058</width>
     <height>950</height>
    </rect>
   </property>
@@ -238,6 +238,9 @@
               </item>
               <item>
                <widget class="QCheckBox" name="find_EXIF_A">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
                 <property name="cursor">
                  <cursorShape>PointingHandCursor</cursorShape>
                 </property>

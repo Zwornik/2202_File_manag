@@ -42,12 +42,13 @@ class MyWindow(QMainWindow):
 		self.init_img = "Tlo.jpg"
 		self.sub_yes = False  # True if walk through files should include sub folders
 		self.path = "C:/TEMP"
+		self.canceled = False
 
 		# Define main window Widgets
 		self.central_widget = self.findChild(QWidget, "centralwidget")
 
-		self.label_A = self.findChild(QLabel, "label_A")
-		self.label_B = self.findChild(QLabel, "label_B")
+		self.summary_label_A = self.findChild(QLabel, "label_A")
+		self.summary_label_B = self.findChild(QLabel, "label_B")
 
 		self.path_label_A = self.findChild(QLabel, "path_label_A")
 		self.path_label_B = self.findChild(QLabel, "path_label_B")
@@ -55,18 +56,18 @@ class MyWindow(QMainWindow):
 		self.image_label = self.findChild(QLabel, "image_view")
 		self.image_label.resize(80, 2000)
 
-		self.browse_A = self.findChild(QPushButton, "Browse_A")
-		self.browse_B = self.findChild(QPushButton, "Browse_B")
-		self.display_files_A = self.findChild(QPushButton, "display_files_A")
-		self.display_files_B = self.findChild(QPushButton, "display_files_B")
-		self.cancel_A = self.findChild(QPushButton, "cancel_A")
-		self.cancel_B = self.findChild(QPushButton, "cancel_B")
-		self.cancel_A.setEnabled(False)  # Freeze buttons
-		self.cancel_B.setEnabled(False)
+		self.browse_btn_A = self.findChild(QPushButton, "Browse_A")
+		self.browse_btn_B = self.findChild(QPushButton, "Browse_B")
+		self.display_files_btn_A = self.findChild(QPushButton, "display_files_A")
+		self.display_files_btn_B = self.findChild(QPushButton, "display_files_B")
+		self.cancel_btn_A = self.findChild(QPushButton, "cancel_A")
+		self.cancel_btn_B = self.findChild(QPushButton, "cancel_B")
+		self.cancel_btn_A.setEnabled(False)  # Freeze buttons
+		self.cancel_btn_B.setEnabled(False)
 
-		self.find_dup = self.findChild(QPushButton, "find_duplicates")
-		self.delete_A = self.findChild(QPushButton, "delete_A")
-		self.delete_B = self.findChild(QPushButton, "delete_B")
+		self.find_duplicates_btn = self.findChild(QPushButton, "find_duplicates")
+		self.delete_btn_A = self.findChild(QPushButton, "delete_A")
+		self.delete_btn_B = self.findChild(QPushButton, "delete_B")
 
 		MyWindow.subf_check_A = self.findChild(QCheckBox, "subfolders_A")
 		MyWindow.subf_check_B = self.findChild(QCheckBox, "subfolders_B")
@@ -97,12 +98,12 @@ class MyWindow(QMainWindow):
 		# # self.splitter_2.setStyleSheet("QSplitter::handle:setMaximumSize(3, 120);}")
 
 		# Acctions
-		self.browse_A.clicked.connect(lambda: self.browse("A"))  # 'Browse' button A clicked
-		self.browse_B.clicked.connect(lambda: self.browse("B"))  # 'Browse' button B clicked
-		self.display_files_A.clicked.connect(lambda: self.display_btn_clicked("A"))  # 'Display files' in tree 'A'
-		self.display_files_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # 'Display files' in tree 'B'
-		self.cancel_A.clicked.connect(self.cancel_it)  # 'Cancel' file search
-		self.cancel_B.clicked.connect(self.cancel_it)  # 'Cancel' file search
+		self.browse_btn_A.clicked.connect(lambda: self.browse("A"))  # 'Browse' button A clicked
+		self.browse_btn_B.clicked.connect(lambda: self.browse("B"))  # 'Browse' button B clicked
+		self.display_files_btn_A.clicked.connect(lambda: self.display_btn_clicked("A"))  # 'Display files' in tree 'A'
+		self.display_files_btn_B.clicked.connect(lambda: self.display_btn_clicked("B"))  # 'Display files' in tree 'B'
+		self.cancel_btn_A.clicked.connect(self.cancel_it)  # 'Cancel' file search
+		self.cancel_btn_B.clicked.connect(self.cancel_it)  # 'Cancel' file search
 		self.tree_A.itemClicked.connect(self.select_img)
 		self.tree_B.itemClicked.connect(self.select_img)
 		# self.thread.progress.connect(lambda: print("OK"))
@@ -113,9 +114,9 @@ class MyWindow(QMainWindow):
 		MyWindow.subf_check_A.toggled.connect(lambda: self.subforders("A"))
 		MyWindow.subf_check_B.toggled.connect(lambda: self.subforders("B"))
 
-		self.find_dup.clicked.connect(self.both_folders_ok)  # Find duplicates button clicked
-		# self.delete_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
-		# self.delete_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
+		self.find_duplicates_btn.clicked.connect(self.both_folders_ok)  # Find duplicates button clicked
+		self.delete_btn_A.clicked.connect(lambda x: self.browse("B"))  # Delete from location A button clicked
+		self.delete_btn_B.clicked.connect(lambda x: self.browse("B"))  # Delete from location B button clicked
 		self.splitter_2.splitterMoved.connect(lambda: self.show_image(self.init_img))
 
 		# GUI variables
@@ -171,9 +172,11 @@ class MyWindow(QMainWindow):
 	def cancel_it(self):
 		"""Cancel file walk when 'Cancel' btn is hit"""
 		print("CANCEL ")
-		self.cancel_A.setEnabled(False)
-		self.cancel_B.setEnabled(False)
-		self.thread.stop()
+		self.cancel_btn_A.setEnabled(False)
+		self.cancel_btn_B.setEnabled(False)
+
+		self.canceled = True
+		self.thread.stop_thread()
 		self.thread.wait()
 
 
@@ -187,6 +190,7 @@ class MyWindow(QMainWindow):
 		image = QPixmap(img).scaled(img_size,
 									Qt.KeepAspectRatio)  # Assign image to QPixmap object with size and keep ratio
 		self.image_label.setPixmap(image)  # Show image in the label
+
 
 	def time_warning(self, side):
 		"""Display time warning dialog"""
@@ -235,15 +239,48 @@ class MyWindow(QMainWindow):
 		self.path_label_A.setText(path) if self.side == "A" else self.path_label_B.setText(
 			path)  # Display path to tree A or B
 
+
+	def disable_buttons(self):
+		"""disable buttons during scanning folders"""
+		self.display_files_btn_A.setEnabled(False)  # Freeze 'Display' buttons
+		self.display_files_btn_B.setEnabled(False)
+		self.cancel_btn_A.setEnabled(True)  # Unlock 'Cancel' buttons
+		self.cancel_btn_B.setEnabled(True)
+		self.browse_btn_A.setEnabled(False)
+		self.browse_btn_B.setEnabled(False)
+		self.find_duplicates_btn.setEnabled(False)
+		self.delete_btn_A.setEnabled(False)
+		self.delete_btn_B.setEnabled(False)
+		MyWindow.exif_check_A.setDisabled(True)
+		MyWindow.exif_check_B.setDisabled(True)
+		MyWindow.subf_check_A.setDisabled(True)
+		MyWindow.subf_check_B.setDisabled(True)
+
+
+	def enable_buttons(self):
+		"""Enable buttons after scanning folders"""
+		self.display_files_btn_A.setEnabled(True)  # Unfreeze buttons
+		self.display_files_btn_B.setEnabled(True)
+		self.browse_btn_A.setEnabled(True)
+		self.browse_btn_B.setEnabled(True)
+		self.find_duplicates_btn.setEnabled(True)
+		self.delete_btn_A.setEnabled(True)
+		self.delete_btn_B.setEnabled(True)
+		MyWindow.exif_check_A.setDisabled(False)
+		MyWindow.exif_check_B.setDisabled(False)
+		MyWindow.subf_check_A.setDisabled(False)
+		MyWindow.subf_check_B.setDisabled(False)
+
+
 	def display_btn_clicked(self, side):
-		"""Establish new thread and communication with it
+		"""Establish new thread and communication with it. Disable buttons
 		variables:
 		- side - determines on which side information is going to be displayed, obtained, widget activated
 		- path - search path for files"""
-		self.display_files_A.setEnabled(False)  # Freeze 'Display' buttons
-		self.display_files_B.setEnabled(False)
-		self.cancel_A.setEnabled(True)  # Unlock 'Cancel' buttons
-		self.cancel_B.setEnabled(True)
+		self.disable_buttons()
+
+		self.summary_label_A.setText("")
+		self.summary_label_B.setText("")
 
 		self.side = side
 
@@ -264,7 +301,7 @@ class MyWindow(QMainWindow):
 	def clear_tree(self):
 		"""Clear tree and display 'Wait...' in the tree"""
 
-		items = [QTreeWidgetItem(["Wait...................."])]
+		items = [QTreeWidgetItem(["Wait, searching folder"])]
 		if self.side == "A":
 			self.tree_A.clear()
 			self.tree_A.insertTopLevelItems(0, items)
@@ -272,26 +309,29 @@ class MyWindow(QMainWindow):
 			self.tree_B.clear()
 			self.tree_B.insertTopLevelItems(0, items)
 
+
 	def show_files(self):
 		"""Display files in corresponding tree and count in label"""
-		print("DISPLAYJJJJJJJJJJJJJJJJ")
-		# Search_thread.quit()
+
+		if self.canceled:  # if canceled by user show message
+			MyWindow.items = []
+			MyWindow.items.append(QTreeWidgetItem(["Canceled."]))
 
 		if self.side == "A":  # Display to tree A or B
 
 			self.tree_A.clear()
 			self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
-			self.label_A.setText(
+			self.summary_label_A.setText(
 				"{} files found".format(self.tree_A.topLevelItemCount()))  # Display items count in Label
 
 		else:
 			self.tree_B.clear()
 			self.tree_B.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
-			self.label_B.setText(
+			self.summary_label_B.setText(
 				"{} files found".format(self.tree_B.topLevelItemCount()))  # Display items count in Label
 
-		self.display_files_A.setEnabled(True)  # Unfreeze buttons
-		self.display_files_B.setEnabled(True)
+		self.canceled = False  # Reset flag 'canceled by user'
+		self.enable_buttons()
 
 
 "----------------------SECOND THREAD---------------------"
@@ -301,42 +341,39 @@ class Search_thread(QThread):
 	finished = pyqtSignal()
 	progress = pyqtSignal(int)
 
-	def __init__(self, path, sub_yes, dupa):
+	def __init__(self, path, sub_yes, side):
 		super().__init__()
 		self.runs = True
 		self.path = path
 		self.sub_yes = sub_yes
-		self.side = dupa
-		print("Start path: ", path)
-		print("Side start: ", self.side)
+		self.side = side
 		MyWindow.items = []
-
-	# path = MyWindow.path  # Variable set in display_btn_clicked
-	# sub_yes = MyWindow.sub_yes
 
 	def run(self):  # QThread default starting function
+		if self.side == "A" and MyWindow.subf_check_A.checkState() or \
+							   self.side == "B" and MyWindow.subf_check_B.checkState():
+			self.sub_yes = True
+		else:
+			self.sub_yes = False
+
 		self.scan(self.path)
-		self.stop()
+		self.stop_thread()
 		self.finished.emit()
 
-	def stop(self):  # stop scan() job
+	def stop_thread(self):  # set flag to stop scan() job
 		self.runs = False
-		MyWindow.items = []
-		print("CancelLLLL")
-		MyWindow.items.append(QTreeWidgetItem(["Canceled..."]))
-
 
 	def scan(self, path):
+		c =0
 		print("path: ", path)
 		print("Runs: ", self.runs)
 		with os.scandir(path) as folder:
 
 			for item in folder:
-				print("going: ", item.path)
-				if self.runs:
-					# for i in range(1):
-					# 	time.sleep(0.5)
-					if MyWindow.subf_check_A.checkState() or MyWindow.subf_check_B.checkState():
+				c += 1
+				print("going: ", item.path, c)
+				if self.runs:  # Flag False if scan canceled by User
+					if self.sub_yes:
 						if item.is_dir():
 							print("DIR: ", path)
 							path = item.path
@@ -358,7 +395,7 @@ class Search_thread(QThread):
 			date = self.get_date(path)
 			size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
 			self.progress.emit(2)
-			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path, "dipa"]))
 		else:
 			return
 
@@ -366,7 +403,7 @@ class Search_thread(QThread):
 		"""Transform time stamp to datatime object"""
 		return dt.fromtimestamp(ts)
 
-	def dateformat(self, date_string):
+	def date_format(self, date_string):
 		"""Format date string"""
 		date_string = date_string.strftime("%Y.%m.%d %H:%M:%S")
 		return date_string
@@ -374,8 +411,8 @@ class Search_thread(QThread):
 	def get_date(self, path):
 		"""EXTRACT 3 PICTURE CREATION DATES AND RETURNS THE OLDEST ONE"""
 
-		date_m = self.dateformat(self.ts_to_dt(os.path.getmtime(path)))  # Windows modification date
-		date_c = self.dateformat(self.ts_to_dt(os.path.getctime(path)))  # Windows file creation date
+		date_m = self.date_format(self.ts_to_dt(os.path.getmtime(path)))  # Windows modification date
+		date_c = self.date_format(self.ts_to_dt(os.path.getctime(path)))  # Windows file creation date
 
 		# Get EXIF date depending on 'Extract EXIF date' checked
 		if self.side == "A" and MyWindow.exif_check_A.checkState() or self.side == "B" and MyWindow.exif_check_B.checkState():
