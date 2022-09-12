@@ -75,7 +75,10 @@ class MyWindow(QMainWindow):
 		MyWindow.exif_check_B = self.findChild(QCheckBox, "find_EXIF_B")
 
 		self.statusBar = self.findChild(QStatusBar, "statusbar")
-		self.statusBar.setFont(QFont("Arial", 18))
+		status_font = QFont("Shell", 12, -1, True)
+		status_font.setStretch(120)
+		self.statusBar.setFont(status_font)
+		self.statusBar.setStyleSheet("QStatusBar{padding-left:20px;color:rgb(216,5,5);font-weight:None}")
 
 		self.tree_A = self.findChild(QTreeWidget, "tree_A")
 		self.tree_B = self.findChild(QTreeWidget, "tree_B")
@@ -160,14 +163,6 @@ class MyWindow(QMainWindow):
 
 		x = info_dialog_obj.exec_()  # Show Dialog window
 
-	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)  # Send select_img to pyqtSlot method to obtain selected item 'it'
-	def select_img(self, it):
-		"""Obtains clicked image and send it to be shown"""
-		print(it.text(0), it.text(4))
-		img = it.text(4)  # file path
-		self.init_img = img
-		img.replace("/", "\\")
-		self.show_image(img)
 
 	def cancel_it(self):
 		"""Cancel file walk when 'Cancel' btn is hit"""
@@ -178,7 +173,28 @@ class MyWindow(QMainWindow):
 		self.canceled = True
 		self.thread.stop_thread()
 		self.thread.wait()
+				
+	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)  # Send select_img to pyqtSlot method to obtain selected item 'it'
+	def select_img(self, selected):
+		"""Obtains clicked image and send selected to be shown"""
+		self.make_red(selected)
+		print(selected.text(0), selected.text(4))
+		img = selected.text(4)  # file path
+		print(selected.text(0), selected.text(1), selected.text(2), selected.text(3), selected.text(4) )
+		# index =
+		print(selected)
+		self.init_img = img
+		img.replace("/", "\\")
+		self.show_image(img)
 
+	def make_red(self, selected):
+		font = QFont()
+		font.setBold(True)
+		color = QBrush(QColor(255,130,0))
+		for i in range(5):
+			# selected.setForeground(i, QBrush(QColor("red")))
+			selected.setBackground(i, color)
+			# selected.setFont(i, font)
 
 	def show_image(self, img):
 		"""Catch label size and display image in this size"""
@@ -321,13 +337,15 @@ class MyWindow(QMainWindow):
 
 			self.tree_A.clear()
 			self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
-			self.summary_label_A.setText(
-				"{} files found".format(self.tree_A.topLevelItemCount()))  # Display items count in Label
+
 
 		else:
 			self.tree_B.clear()
 			self.tree_B.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
-			self.summary_label_B.setText(
+
+		self.summary_label_A.setText(
+				"{} files found".format(self.tree_A.topLevelItemCount()))  # Display items count in Label
+		self.summary_label_B.setText(
 				"{} files found".format(self.tree_B.topLevelItemCount()))  # Display items count in Label
 
 		self.canceled = False  # Reset flag 'canceled by user'
@@ -387,7 +405,7 @@ class Search_thread(QThread):
 							self.get_file_data(item)
 
 	def get_file_data(self, item):
-		"""Extract data from a file in 'item' object"""
+		"""Extract data from a file in 'item' scandir object"""
 		if self.runs:
 			path = item.path
 			name = item.name
@@ -395,7 +413,7 @@ class Search_thread(QThread):
 			date = self.get_date(path)
 			size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
 			self.progress.emit(2)
-			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path, "dipa"]))
+			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
 		else:
 			return
 
