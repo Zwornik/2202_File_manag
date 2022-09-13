@@ -25,8 +25,14 @@
   <property name="locale">
    <locale language="English" country="UnitedKingdom"/>
   </property>
+  <property name="tabShape">
+   <enum>QTabWidget::Rounded</enum>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
+    <property name="spacing">
+     <number>5</number>
+    </property>
     <property name="leftMargin">
      <number>9</number>
     </property>
@@ -34,7 +40,7 @@
      <number>9</number>
     </property>
     <property name="bottomMargin">
-     <number>20</number>
+     <number>5</number>
     </property>
     <item>
      <widget class="QFrame" name="frame">
@@ -404,10 +410,16 @@
                <enum>QAbstractScrollArea::AdjustIgnored</enum>
               </property>
               <property name="editTriggers">
-               <set>QAbstractItemView::DoubleClicked|QAbstractItemView::EditKeyPressed</set>
+               <set>QAbstractItemView::NoEditTriggers</set>
               </property>
               <property name="showDropIndicator" stdset="0">
                <bool>true</bool>
+              </property>
+              <property name="dragEnabled">
+               <bool>false</bool>
+              </property>
+              <property name="dragDropMode">
+               <enum>QAbstractItemView::NoDragDrop</enum>
               </property>
               <property name="alternatingRowColors">
                <bool>false</bool>
@@ -424,7 +436,13 @@
                 <height>16</height>
                </size>
               </property>
+              <property name="indentation">
+               <number>15</number>
+              </property>
               <property name="rootIsDecorated">
+               <bool>true</bool>
+              </property>
+              <property name="uniformRowHeights">
                <bool>true</bool>
               </property>
               <property name="itemsExpandable">
@@ -441,6 +459,9 @@
               </property>
               <property name="wordWrap">
                <bool>true</bool>
+              </property>
+              <property name="headerHidden">
+               <bool>false</bool>
               </property>
               <property name="columnCount">
                <number>5</number>
@@ -494,6 +515,36 @@
                 <string>Path</string>
                </property>
               </column>
+              <item>
+               <property name="text">
+                <string>sdfsdf</string>
+               </property>
+               <item>
+                <property name="text">
+                 <string>fsdfsdf</string>
+                </property>
+                <item>
+                 <property name="text">
+                  <string>ddd</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>ccc</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>bbb</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>aaa</string>
+                 </property>
+                </item>
+               </item>
+              </item>
              </widget>
             </item>
             <item>

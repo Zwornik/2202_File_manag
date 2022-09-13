@@ -15,7 +15,7 @@ from datetime import datetime as dt
 
 # from File_manag import *
 
-logging.basicConfig(level=logging.ERROR)
+# logging.basicConfig(level=logging.ERROR)
 
 
 class MyWindow(QMainWindow):
@@ -74,6 +74,7 @@ class MyWindow(QMainWindow):
 		MyWindow.exif_check_A = self.findChild(QCheckBox, "find_EXIF_A")
 		MyWindow.exif_check_B = self.findChild(QCheckBox, "find_EXIF_B")
 
+		# Status bar settings
 		self.statusBar = self.findChild(QStatusBar, "statusbar")
 		status_font = QFont("Shell", 12, -1, True)
 		status_font.setStretch(120)
@@ -143,9 +144,21 @@ class MyWindow(QMainWindow):
 	def both_folders_ok(self):
 		"""Check if both folders were selected"""
 		if self.path_label_A.text() and self.path_label_B.text():
-			print("Comapre trees")
+			self.compare_trees()
 		else:
 			self.info_dialog("Please select folders for both locations")  # Show message in dialog window
+
+	def compare_trees(self):
+		print("Compare")
+
+		MyWindow.A[0:3] = MyWindow.B[0:3]
+		print("A: ", MyWindow.A)
+		print("B: ", MyWindow.B)
+		for i in MyWindow.A:
+			if i in MyWindow.B:
+				print(i)
+			else:
+				print("no")
 
 	def info_dialog(self, message):
 		"""Dialog window with message and 'OK' button"""
@@ -328,28 +341,53 @@ class MyWindow(QMainWindow):
 
 	def show_files(self):
 		"""Display files in corresponding tree and count in label"""
+		# if self.side == "A":
+		# 	MyWindow.A = MyWindow.items
+		# else:
+		# 	MyWindow.B = MyWindow.items
 
+
+
+		self.ite = []
 		if self.canceled:  # if canceled by user show message
 			MyWindow.items = []
 			MyWindow.items.append(QTreeWidgetItem(["Canceled."]))
 
+		print("list: ", MyWindow.lis)
+		print(len(MyWindow.lis))
+		print("Path: ", self.path)
+
 		if self.side == "A":  # Display to tree A or B
-
 			self.tree_A.clear()
-			self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
+			# self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
 
-
+			self.tree_from_dict(data = dic, parent = self.tree_A)
 		else:
 			self.tree_B.clear()
 			self.tree_B.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
+			# self.tree_from_dict(data=MyWindow.dic, parent=self.tree_B)
 
 		self.summary_label_A.setText(
-				"{} files found".format(self.tree_A.topLevelItemCount()))  # Display items count in Label
+				"{} files found".format(self.tree_A.topLevelItemCount()))  # Display items count in summary_label
 		self.summary_label_B.setText(
-				"{} files found".format(self.tree_B.topLevelItemCount()))  # Display items count in Label
+				"{} files found".format(self.tree_B.topLevelItemCount()))  # Display items count in summary_label
 
 		self.canceled = False  # Reset flag 'canceled by user'
 		self.enable_buttons()
+
+	def tree_from_dict(self, data=None, parent=None):
+		for key, value in data.items():
+			item = QTreeWidgetItem(parent)
+
+			# self.tree_A.insertTopLevelItem(0, [item])
+
+			item.setText(0, key)
+
+			if isinstance(value, list):
+
+				[self.tree_from_dict(i, parent=item) for idx, i in enumerate(value)]
+			else:
+				item.setText(1, value)
 
 
 "----------------------SECOND THREAD---------------------"
@@ -366,6 +404,9 @@ class Search_thread(QThread):
 		self.sub_yes = sub_yes
 		self.side = side
 		MyWindow.items = []
+		MyWindow.lis = []
+		MyWindow.dic = dict()
+		self.items = []
 
 	def run(self):  # QThread default starting function
 		if self.side == "A" and MyWindow.subf_check_A.checkState() or \
@@ -375,6 +416,7 @@ class Search_thread(QThread):
 			self.sub_yes = False
 
 		self.scan(self.path)
+		print(MyWindow.items)
 		self.stop_thread()
 		self.finished.emit()
 
@@ -383,37 +425,41 @@ class Search_thread(QThread):
 
 	def scan(self, path):
 		c =0
-		print("path: ", path)
-		print("Runs: ", self.runs)
+		# print("path: ", path)
+		# print("Runs: ", self.runs)
 		with os.scandir(path) as folder:
 
 			for item in folder:
 				c += 1
-				print("going: ", item.path, c)
+				# print("going: ", item.path, c)
 				if self.runs:  # Flag False if scan canceled by User
+					path = item.path
+					# print(item.name)
+					self.get_file_data(item)
 					if self.sub_yes:
-						if item.is_dir():
-							print("DIR: ", path)
-							path = item.path
+						if item.is_dir():  # ?????? Do optymalizacji
+							# print("DIR: ", path)
 							self.scan(path)
-						elif item.is_file():
-							print("FIle: ", item.path)
-							self.get_file_data(item)
-					else:
-						if item.is_file():
-							print("le: ", item.name)
-							self.get_file_data(item)
+
 
 	def get_file_data(self, item):
 		"""Extract data from a file in 'item' scandir object"""
+		folder = ''
 		if self.runs:
 			path = item.path
+			folder = item.name if item.stat().st_size == 0 else ""
 			name = item.name
+			# print(folder, name)
 			file_type = os.path.splitext(item)[1]
 			date = self.get_date(path)
 			size = ("{:,.0f} KB".format(item.stat().st_size / 1000).replace(",", " "))
-			self.progress.emit(2)
+			self.progress.emit(2)  # ?????? potrzebne?
+			path = path.partition("\\")[2]
 			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
+			path = path.split('\\')
+
+			# I know, dict would be faster, but it wouldn't allow to have duplicates withing single dict
+			MyWindow.lis.append([path, name, file_type, size, date] if item.is_file() else [path])
 		else:
 			return
 
