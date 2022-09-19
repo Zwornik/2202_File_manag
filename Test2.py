@@ -107,11 +107,14 @@ class MyWindow(QMainWindow):
 
             print("OLD: ", folder)
             print("PATH: ", path_list[:-1])
+            if len(row[0]) == 1:
+                parent = root
 
             if folder != path_list[:-1]:
-                parent = root
+
                 for item in path_list[:-1]:
-                    parent = QTreeWidgetItem(parent, [item])
+                    if not (item in folder):
+                        parent = QTreeWidgetItem(parent, [item])
 
                 folder = path_list[:-1]
 
