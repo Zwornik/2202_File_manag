@@ -99,36 +99,45 @@ class MyWindow(QMainWindow):
     def tree_from_list(self, data=None):
         root = self.tree
         parent = root
-        temp = ''
+        flag = ''
+        folder = []
 
-        old = ''
+        for row in data:  # 'row' = Single file records
+            path_list = row[0]  # file path as list of folders
 
-        for row in data:
-            path_list = row[0]
+            print("OLD: ", folder)
+            print("PATH: ", path_list[:-1])
 
-            if len(row) == 1:
-                old = [path_list[-1]]
-
-            print("OLD: ", old)
-            print("PATH: ", path_list)
-
-            if len(path_list) > 1:   # if nested or folder
-                if old == path_list[:-1]:
-                   if temp != path_list[-2]:
-                        parent = QTreeWidgetItem(self.tree, [path_list[-2]])
-                        temp = path_list[-2]
-            else:
+            if folder != path_list[:-1]:
                 parent = root
+                for item in path_list[:-1]:
+                    parent = QTreeWidgetItem(parent, [item])
 
-            if len(row) > 1:  # file
-                QTreeWidgetItem(parent, [path_list[-1]])
+                folder = path_list[:-1]
 
-            # if old != path_list[:-1]:  # if different from previous
+
+            if len(row) > 1:
+                QTreeWidgetItem(parent, [path_list[-1]])  # Add file to tree
+
+
+
+
+
+            # if old != path_list[-1]:  # if different from previous
             #     for n in range(len(path_list)):
             #         if n < len(path_list) - 1:
-
-            if len(row) != 1:
-                old = path_list[:-1]
+            #
+            #     if old == path_list[:-1]:
+            #        if flag != path_list[-2]:
+            #
+            #             flag = path_list[-2]
+            # else:
+            #     parent = root
+            #
+            # if len(row) > 1:  # file
+            #
+            # if len(row) == 1:  #folder
+            #     old = path_list[-1]
 
 
     def tee(self, parent):
