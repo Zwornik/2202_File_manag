@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import *
 from PyQt5 import uic
 from PyQt5 import QtCore, QtGui, QtWidgets
 
-import sys, os, logging, exifread, time
+import sys, os, logging, exifread, time, itertools
 from datetime import datetime as dt
 
 # from File_manag import *
@@ -128,9 +128,10 @@ class MyWindow(QMainWindow):
 		self.path_label_B.setText(self.path)
 
 		# self.image_label.
-
+		#
 		# self.show_image()
 		# Showing the App
+
 		self.show()
 
 	def subforders(self, side):
@@ -187,23 +188,23 @@ class MyWindow(QMainWindow):
 		self.thread.stop_thread()
 		self.thread.wait()
 				
-	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)  # Send select_img to pyqtSlot method to obtain selected item 'it'
+	@QtCore.pyqtSlot(QtWidgets.QTreeWidgetItem)  # Send select_img to pyqtSlot method to obtain selected item 'selected'
 	def select_img(self, selected):
 		"""Obtains clicked image and send selected to be shown"""
-		self.make_red(selected)
+		self.make_color(selected)
 		print(selected.text(0), selected.text(4))
 		img = selected.text(4)  # file path
 		print(selected.text(0), selected.text(1), selected.text(2), selected.text(3), selected.text(4) )
 		# index =
-		print(selected)
+		print(QtWidgets.indexOfChild(selected))
 		self.init_img = img
 		img.replace("/", "\\")
 		self.show_image(img)
 
-	def make_red(self, selected):
+	def make_color(self, selected):
 		font = QFont()
 		font.setBold(True)
-		color = QBrush(QColor(255,130,0))
+		color = QBrush(QColor(255,130,250))
 		for i in range(5):
 			# selected.setForeground(i, QBrush(QColor("red")))
 			selected.setBackground(i, color)
@@ -361,7 +362,7 @@ class MyWindow(QMainWindow):
 			self.tree_A.clear()
 			# self.tree_A.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
 
-			self.tree_from_dict(data = dic, parent = self.tree_A)
+			self.tree_from_list(MyWindow.lis, self.tree_A)
 		else:
 			self.tree_B.clear()
 			self.tree_B.insertTopLevelItems(0, MyWindow.items)  # Variable set by 'Search_thread.run'
@@ -375,19 +376,40 @@ class MyWindow(QMainWindow):
 		self.canceled = False  # Reset flag 'canceled by user'
 		self.enable_buttons()
 
-	def tree_from_dict(self, data=None, parent=None):
-		for key, value in data.items():
-			item = QTreeWidgetItem(parent)
+	def tree_from_list(self, data, root):
+		root = self.tree_A
+		parent = root  # QtreeWidget A or B
 
-			# self.tree_A.insertTopLevelItem(0, [item])
+		folder = []
 
-			item.setText(0, key)
+		for row in data:  # 'row' = Single file records
+			path_list = row[0]  # file path stored as list of folders ["dir1", "dir2", ..., "file.name"]
 
-			if isinstance(value, list):
+			print("OLD: ", folder)
+			print("PATH: ", path_list[:-1])
+			if len(path_list) == 1:  # if item is not nested
+				parent = root  # display in first level of the QTree
 
-				[self.tree_from_dict(i, parent=item) for idx, i in enumerate(value)]
-			else:
-				item.setText(1, value)
+			if folder != path_list[:-1]:  # if folder path is different from previous one
+
+				for p, f in itertools.zip_longest(path_list[:-1], folder, fillvalue=None):
+					print("P ", p, "  F ", f)
+					if p != f and p is not None:
+						parent = QTreeWidgetItem(parent, [p])  # adding folder level dipper
+						a = p
+					elif p is None and len(path_list) > 1:
+						print("JESSSSSSSSSSSS")
+						parent.removeChild(parent.child(1))
+
+				folder = path_list[:-1]  # save previous folder path
+
+			if len(row) > 1:  # if file
+				path_text = '/'.join(row[0])
+				QTreeWidgetItem(parent, [path_list[-1], row[2], row[3], row[4], path_text, ])  # Add file to tree
+
+		# parent.removeChild(QTreeWidgetItem(parent))  # Removing last blank item
+		self.tree_A.expandAll()
+		self.tree_B.expandAll()
 
 
 "----------------------SECOND THREAD---------------------"
@@ -449,6 +471,7 @@ class Search_thread(QThread):
 			path = item.path
 			folder = item.name if item.stat().st_size == 0 else ""
 			name = item.name
+			dirr = item.is_dir()  # Flag True if is dir
 			# print(folder, name)
 			file_type = os.path.splitext(item)[1]
 			date = self.get_date(path)
@@ -457,7 +480,8 @@ class Search_thread(QThread):
 			path = path.partition("\\")[2]
 			MyWindow.items.append(QTreeWidgetItem([name, file_type, size, date, path]))
 			path = path.split('\\')
-
+			for i in range(len(path)):
+				a = path[1:]
 			# I know, dict would be faster, but it wouldn't allow to have duplicates withing single dict
 			MyWindow.lis.append([path, name, file_type, size, date] if item.is_file() else [path])
 		else:
