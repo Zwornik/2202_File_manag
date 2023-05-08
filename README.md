@@ -1,4 +1,4 @@
-File Duplicate Manager
+File Duplicate Manager - PROJECT IN PROGRESS and not working yet
 
 This app resolves the problem I have with pictures automatically synchronising from my phone to my OneDrive folder. At the same time, I have some of these pictures already sorted and saved in various folders in the same OneDrive.
 
